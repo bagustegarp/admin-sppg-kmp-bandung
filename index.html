@@ -10,9 +10,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Supabase JS Client & SheetJS (Export Excel Multi-Sheet) -->
+    <!-- Supabase JS Client & XLSX-JS-Style (Export Excel Berwarna & Rapi) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     
     <style>
         :root {
@@ -73,7 +73,7 @@
         @keyframes pulseHalo { 0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4); } 70% { box-shadow: 0 0 0 12px rgba(14, 165, 233, 0); } 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); } }
         @keyframes rippleEffect { to { transform: scale(4); opacity: 0; } }
 
-        /* LOGIN GATE OVERLAY */
+        /* LOGIN GATE OVERLAY (DIPERBARUI & KONTRAS JELAS) */
         .login-gate {
             position: fixed;
             inset: 0;
@@ -83,25 +83,38 @@
             justify-content: center;
             padding: 20px;
             background: radial-gradient(circle at 20% 20%, rgba(30, 58, 138, 0.96) 0%, rgba(2, 6, 23, 0.98) 100%);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
+            overflow-y: auto;
         }
         .login-gate.hidden { display: none; }
         .login-card {
-            background: rgba(255, 255, 255, 0.97);
-            width: 410px;
+            background: #ffffff;
+            width: 430px;
             max-width: 100%;
-            border-radius: 20px;
-            padding: 32px 28px;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
-            border: 1px solid rgba(191, 219, 254, 0.9);
+            border-radius: 22px;
+            padding: 30px 28px 26px 28px;
+            box-shadow: 0 28px 70px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(191, 219, 254, 0.95);
+            position: relative;
+            overflow: hidden;
             animation: containerAppear 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .login-card-top-bar {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #1e3a8a, #2563eb, #0ea5e9);
+            transition: background 0.3s ease;
+        }
+        .login-card.signup-mode .login-card-top-bar {
+            background: linear-gradient(90deg, #065f46, #059669, #10b981);
         }
         .login-brand {
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
-            margin-bottom: 22px;
+            margin-bottom: 18px;
         }
         .login-logos {
             display: flex;
@@ -110,51 +123,140 @@
             margin-bottom: 12px;
         }
         .login-logos img {
-            height: 44px;
+            height: 46px;
             width: auto;
             object-fit: contain;
-            background: #fff;
-            padding: 4px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.14);
+            background: #f8fbff;
+            padding: 5px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.08);
         }
         .login-brand h2 {
             font-family: 'Outfit', sans-serif;
-            font-size: 20px;
+            font-size: 21px;
             font-weight: 800;
             color: var(--accent-deep);
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
         .login-brand p {
             font-size: 12px;
             color: var(--text-secondary);
             font-weight: 600;
         }
+
+        /* TAB PEMBEDA MASUK VS DAFTAR */
         .login-tabs {
-            display: flex;
-            background: #eff6ff;
-            padding: 4px;
-            border-radius: 12px;
-            margin-bottom: 18px;
-            border: 1px solid #dbeafe;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            background: #f1f5f9;
+            padding: 5px;
+            border-radius: 14px;
+            margin-bottom: 14px;
+            border: 1px solid #e2e8f0;
         }
         .login-tab-btn {
-            flex: 1;
-            padding: 8px;
+            padding: 10px 8px;
             border: none;
             background: transparent;
-            border-radius: 9px;
-            font-size: 12px;
+            border-radius: 10px;
+            font-size: 12.5px;
             font-weight: 700;
-            color: var(--text-secondary);
+            color: #64748b;
             cursor: pointer;
-            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            transition: all 0.22s ease;
         }
-        .login-tab-btn.active {
-            background: #ffffff;
-            color: var(--accent-deep);
-            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+        .login-tab-btn:hover:not(.active-login):not(.active-signup) {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.6);
         }
+        .login-tab-btn.active-login {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
+        }
+        .login-tab-btn.active-signup {
+            background: linear-gradient(135deg, #065f46 0%, #059669 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.28);
+        }
+
+        /* BANNER INDIKATOR MODE AKTIF */
+        .auth-mode-banner {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 9px 12px;
+            border-radius: 10px;
+            font-size: 11.5px;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 14px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e3a8a;
+            transition: all 0.25s ease;
+        }
+        .auth-mode-banner.signup-banner {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+        }
+
+        /* INPUT DENGAN IKON & SHOW/HIDE PASSWORD */
+        .input-icon-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-icon-wrap > i.field-icon {
+            position: absolute;
+            left: 12px;
+            color: #64748b;
+            font-size: 13px;
+            pointer-events: none;
+        }
+        .input-icon-wrap .custom-input {
+            padding-left: 36px;
+            padding-right: 36px;
+            height: 41px;
+        }
+        .toggle-pass-btn {
+            position: absolute;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 13px;
+            padding: 4px;
+        }
+        .toggle-pass-btn:hover { color: var(--accent-deep); }
+
+        .btn-auth-submit-login {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #0ea5e9 100%) !important;
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.28) !important;
+        }
+        .btn-auth-submit-signup {
+            background: linear-gradient(135deg, #065f46 0%, #059669 60%, #10b981 100%) !important;
+            box-shadow: 0 6px 16px rgba(5, 150, 105, 0.28) !important;
+        }
+
+        .login-card-footer {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid #f1f5f9;
+            text-align: center;
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
         .forgot-link-btn {
             background: none;
             border: none;
@@ -550,7 +652,7 @@
 
         /* MODALS & TOAST */
         #toast-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-        .custom-toast { background: #ffffff; border-radius: var(--radius-md); box-shadow: 0 10px 26px rgba(15, 23, 42, 0.16); padding: 13px 16px; display: flex; align-items: center; gap: 11px; min-width: 270px; max-width: 390px; border-left: 4px solid; pointer-events: all; }
+        .custom-toast { background: #ffffff; border-radius: var(--radius-md); box-shadow: 0 10px 26px rgba(15, 23, 42, 0.16); padding: 12px 16px; display: flex; align-items: center; gap: 10px; min-width: 240px; max-width: 340px; border-left: 4px solid; pointer-events: all; }
         .custom-toast.success { border-left-color: var(--success); } .custom-toast.error { border-left-color: var(--danger); } .custom-toast.warning { border-left-color: var(--warning); }
         .toast-text { font-size: 12px; font-weight: 600; color: var(--text-primary); }
 
@@ -594,7 +696,8 @@
 
     <!-- PORTAL LOGIN MASTER ADMIN -->
     <div class="login-gate" id="login-gate">
-        <div class="login-card">
+        <div class="login-card" id="login-card-box">
+            <div class="login-card-top-bar"></div>
             <div class="login-brand">
                 <div class="login-logos">
                     <img src="logo-pemkot.png" alt="Logo Pemkot" onerror="this.src='https://via.placeholder.com/50?text=Pemkot'">
@@ -604,42 +707,86 @@
                 <p>Rekapitulasi SPPG & KMP Kota Bandung</p>
             </div>
 
+            <!-- TAB PEMBEDA ANTARA MASUK & DAFTAR -->
             <div class="login-tabs" id="login-tabs-wrap">
-                <button type="button" class="login-tab-btn active" id="auth-tab-login" onclick="switchAuthTab('login')">Masuk Admin</button>
-                <button type="button" class="login-tab-btn" id="auth-tab-signup" onclick="switchAuthTab('signup')">Daftar Admin Baru</button>
+                <button type="button" class="login-tab-btn active-login" id="auth-tab-login" onclick="switchAuthTab('login')">
+                    <i class="fas fa-sign-in-alt"></i> Masuk
+                </button>
+                <button type="button" class="login-tab-btn" id="auth-tab-signup" onclick="switchAuthTab('signup')">
+                    <i class="fas fa-user-plus"></i> Daftar Baru
+                </button>
+            </div>
+
+            <!-- BANNER PENJELASAN MODE AKTIF -->
+            <div class="auth-mode-banner" id="auth-mode-banner">
+                <i class="fas fa-info-circle" style="font-size:15px; flex-shrink:0;"></i>
+                <span><strong>Mode Masuk:</strong> Gunakan email dan kata sandi yang sudah terdaftar.</span>
             </div>
 
             <!-- FORM LOGIN / DAFTAR ADMIN -->
             <form id="admin-auth-form" onsubmit="handleAdminAuth(event)" style="display:flex; flex-direction:column; gap:12px;">
                 <div class="input-group">
-                    <label class="form-label">Email Admin Aktif</label>
-                    <input type="email" id="auth-email" class="custom-input" placeholder="contoh@gmail.com" required>
+                    <label class="form-label">Email Admin</label>
+                    <div class="input-icon-wrap">
+                        <i class="fas fa-envelope field-icon"></i>
+                        <input type="email" id="auth-email" class="custom-input" placeholder="nama@gmail.com" required>
+                    </div>
                 </div>
+
                 <div class="input-group">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <label class="form-label">Kata Sandi</label>
-                        <button type="button" class="forgot-link-btn" onclick="kirimLinkResetPassword()">Lupa Password?</button>
+                        <button type="button" class="forgot-link-btn" id="forgot-pass-link" onclick="kirimLinkResetPassword()">Lupa Password?</button>
                     </div>
-                    <input type="password" id="auth-password" class="custom-input" placeholder="Minimal 6 karakter..." minlength="6" required>
+                    <div class="input-icon-wrap">
+                        <i class="fas fa-lock field-icon"></i>
+                        <input type="password" id="auth-password" class="custom-input" placeholder="Minimal 6 karakter" minlength="6" required>
+                        <button type="button" class="toggle-pass-btn" onclick="togglePasswordVisibility('auth-password', this)" title="Tampilkan/Sembunyikan">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-refresh ripple-btn" id="btn-auth-submit" style="width:100%; padding:11px; margin-top:4px;">
-                    <span><i class="fas fa-lock-open"></i> Masuk ke Dashboard Admin</span>
+
+                <!-- KOLOM KONFIRMASI KATA SANDI (KHUSUS SAAT DAFTAR BARU) -->
+                <div class="input-group" id="confirm-password-group" style="display:none;">
+                    <label class="form-label">Ulangi Kata Sandi</label>
+                    <div class="input-icon-wrap">
+                        <i class="fas fa-shield-alt field-icon"></i>
+                        <input type="password" id="auth-password-confirm" class="custom-input" placeholder="Ketik ulang kata sandi" minlength="6">
+                        <button type="button" class="toggle-pass-btn" onclick="togglePasswordVisibility('auth-password-confirm', this)" title="Tampilkan/Sembunyikan">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-refresh btn-auth-submit-login ripple-btn" id="btn-auth-submit" style="width:100%; padding:11.5px; margin-top:4px; font-size:12.5px;">
+                    <span><i class="fas fa-sign-in-alt"></i> Masuk ke Dashboard</span>
                 </button>
             </form>
 
             <!-- FORM GANTI PASSWORD BARU (OTOMATIS MUNCUL SAAT KLIK LINK EMAIL RESET) -->
             <form id="new-password-form" onsubmit="simpanPasswordBaru(event)" style="display:none; flex-direction:column; gap:12px;">
                 <div style="background:#eff6ff; border:1px solid #bfdbfe; padding:10px 12px; border-radius:10px; font-size:11.5px; color:var(--accent-deep); font-weight:600;">
-                    <i class="fas fa-shield-alt" style="color:var(--accent);"></i> Verifikasi link email berhasil. Silakan buat kata sandi baru untuk akun admin Anda.
+                    <i class="fas fa-key" style="color:var(--accent);"></i> Silakan buat kata sandi baru untuk akun admin Anda.
                 </div>
                 <div class="input-group">
                     <label class="form-label">Kata Sandi Baru</label>
-                    <input type="password" id="new-admin-password" class="custom-input" placeholder="Minimal 6 karakter..." minlength="6" required>
+                    <div class="input-icon-wrap">
+                        <i class="fas fa-lock field-icon"></i>
+                        <input type="password" id="new-admin-password" class="custom-input" placeholder="Minimal 6 karakter" minlength="6" required>
+                        <button type="button" class="toggle-pass-btn" onclick="togglePasswordVisibility('new-admin-password', this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-refresh ripple-btn" id="btn-save-new-pass" style="width:100%; padding:11px;">
-                    <span><i class="fas fa-key"></i> Simpan Kata Sandi Baru</span>
+                <button type="submit" class="btn btn-refresh btn-auth-submit-login ripple-btn" id="btn-save-new-pass" style="width:100%; padding:11.5px;">
+                    <span><i class="fas fa-check"></i> Simpan Kata Sandi Baru</span>
                 </button>
             </form>
+
+            <div class="login-card-footer">
+                Bagian Tata Pemerintahan &bull; Setda Kota Bandung
+            </div>
         </div>
     </div>
 
@@ -778,7 +925,7 @@
                         </button>
                     </div>
                     <span style="font-size: 12px; color: #1e3a8a; font-weight: 600; display: flex; align-items: center; gap: 6px;">
-                        <i class="fas fa-database" style="color: #10b981;"></i> Terhubung Real-Time ke Server Supabase
+                        <i class="fas fa-circle" style="color: #10b981; font-size: 8px;"></i> Data Terhubung Real-Time
                     </span>
                 </div>
 
@@ -786,8 +933,8 @@
                 <div id="admin-data-container">
                     <div class="empty-state">
                         <div class="empty-icon"><i class="fas fa-spinner fa-spin"></i></div>
-                        <h3>Memuat Data dari Server...</h3>
-                        <p>Mohon tunggu sebentar, sedang mengambil data SPPG & KMP Kota Bandung.</p>
+                        <h3>Memuat Data...</h3>
+                        <p>Sedang mengambil data SPPG & KMP Kota Bandung.</p>
                     </div>
                 </div>
             </div>
@@ -893,7 +1040,7 @@
                 <button class="close-modal" onclick="closeContactModal()"><i class="fas fa-times"></i></button>
             </div>
             <p style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5;">
-                Kendala teknis sinkronisasi database atau akun admin? Hubungi tim IT Bagtapem:
+                Kendala teknis sistem atau akun admin? Hubungi tim IT Bagtapem:
             </p>
             <a href="https://wa.me/6287825666617" target="_blank" rel="noopener noreferrer" style="display:flex; align-items:center; gap:12px; padding:12px; background:#f0f7ff; border:1px solid #dbeafe; border-radius:10px; text-decoration:none; color:var(--text-primary);">
                 <div style="width:40px; height:40px; border-radius:10px; background:#16a34a; color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px;"><i class="fab fa-whatsapp"></i></div>
@@ -906,7 +1053,7 @@
     </div>
 
     <script>
-        // Konfigurasi Supabase Project: tapemSPPG (Sama persis dengan web input)
+        // Konfigurasi Database Backend
         const SUPABASE_URL = 'https://xkshwsrdaokpynuijqla.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_UzSES_7G-g6RFuwGSva2cA_T95qe74Y';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -966,9 +1113,21 @@
             toast.className = `custom-toast ${type}`;
             let iconClass = type === 'error' ? 'fa-times-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-check-circle';
             let iconColor = type === 'error' ? '#ef4444' : type === 'warning' ? '#d97706' : '#10b981';
-            toast.innerHTML = `<i class="fas ${iconClass}" style="color:${iconColor}; font-size:17px;"></i><div class="toast-text">${escapeHTML(message)}</div>`;
+            toast.innerHTML = `<i class="fas ${iconClass}" style="color:${iconColor}; font-size:16px;"></i><div class="toast-text">${escapeHTML(message)}</div>`;
             container.appendChild(toast);
-            setTimeout(() => toast.remove(), 4000);
+            setTimeout(() => toast.remove(), 3500);
+        }
+
+        function togglePasswordVisibility(inputId, btnEl) {
+            const input = document.getElementById(inputId);
+            const icon = btnEl.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
         }
 
         // ==========================================
@@ -976,24 +1135,67 @@
         // ==========================================
         function switchAuthTab(mode) {
             authMode = mode;
+            const cardBox = document.getElementById('login-card-box');
+            const tabLogin = document.getElementById('auth-tab-login');
+            const tabSignup = document.getElementById('auth-tab-signup');
+            const banner = document.getElementById('auth-mode-banner');
+            const btn = document.getElementById('btn-auth-submit');
+            const confirmGroup = document.getElementById('confirm-password-group');
+            const confirmInput = document.getElementById('auth-password-confirm');
+            const forgotLink = document.getElementById('forgot-pass-link');
+
             document.getElementById('new-password-form').style.display = 'none';
             document.getElementById('admin-auth-form').style.display = 'flex';
-            document.getElementById('auth-tab-login').classList.toggle('active', mode === 'login');
-            document.getElementById('auth-tab-signup').classList.toggle('active', mode === 'signup');
-            const btn = document.getElementById('btn-auth-submit');
-            btn.innerHTML = mode === 'login'
-                ? '<span><i class="fas fa-lock-open"></i> Masuk ke Dashboard Admin</span>'
-                : '<span><i class="fas fa-user-plus"></i> Daftarkan Akun Admin</span>';
+
+            if (mode === 'login') {
+                cardBox.classList.remove('signup-mode');
+                tabLogin.classList.add('active-login');
+                tabSignup.classList.remove('active-signup');
+
+                banner.classList.remove('signup-banner');
+                banner.innerHTML = '<i class="fas fa-info-circle" style="font-size:15px; flex-shrink:0;"></i><span><strong>Mode Masuk:</strong> Gunakan email dan kata sandi yang sudah terdaftar.</span>';
+
+                confirmGroup.style.display = 'none';
+                confirmInput.required = false;
+                confirmInput.value = '';
+                forgotLink.style.display = 'inline';
+
+                btn.classList.remove('btn-auth-submit-signup');
+                btn.classList.add('btn-auth-submit-login');
+                btn.innerHTML = '<span><i class="fas fa-sign-in-alt"></i> Masuk ke Dashboard</span>';
+            } else {
+                cardBox.classList.add('signup-mode');
+                tabLogin.classList.remove('active-login');
+                tabSignup.classList.add('active-signup');
+
+                banner.classList.add('signup-banner');
+                banner.innerHTML = '<i class="fas fa-user-check" style="font-size:15px; flex-shrink:0;"></i><span><strong>Mode Pendaftaran:</strong> Buat akun admin baru menggunakan email aktif.</span>';
+
+                confirmGroup.style.display = 'flex';
+                confirmInput.required = true;
+                forgotLink.style.display = 'none';
+
+                btn.classList.remove('btn-auth-submit-login');
+                btn.classList.add('btn-auth-submit-signup');
+                btn.innerHTML = '<span><i class="fas fa-user-plus"></i> Daftarkan Akun Baru</span>';
+            }
         }
 
         async function handleAdminAuth(e) {
             e.preventDefault();
             const email = document.getElementById('auth-email').value.trim().toLowerCase();
             const password = document.getElementById('auth-password').value;
+            const confirmPassword = document.getElementById('auth-password-confirm').value;
             const btn = document.getElementById('btn-auth-submit');
 
             if (!email || !email.includes('@')) {
-                showToast("Masukkan alamat email aktif yang valid!", "error");
+                showToast("Masukkan email yang valid.", "error");
+                return;
+            }
+
+            if (authMode === 'signup' && password !== confirmPassword) {
+                showToast("Konfirmasi kata sandi tidak cocok.", "error");
+                document.getElementById('auth-password-confirm').focus();
                 return;
             }
 
@@ -1002,7 +1204,7 @@
                 if (authMode === 'signup') {
                     const { data, error } = await supabaseClient.auth.signUp({ email, password });
                     if (error) throw error;
-                    showToast("Akun admin berhasil didaftarkan! Silakan masuk.", "success");
+                    showToast("Pendaftaran berhasil. Silakan masuk.", "success");
                     if (data.session) {
                         enterAdminDashboard(data.user);
                     } else {
@@ -1012,10 +1214,14 @@
                     const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
                     if (error) throw error;
                     enterAdminDashboard(data.user);
-                    showToast("Selamat datang di Dashboard Master Admin!", "success");
+                    showToast("Berhasil masuk.", "success");
                 }
             } catch (err) {
-                showToast(err.message || "Gagal melakukan autentikasi admin.", "error");
+                if (authMode === 'login') {
+                    showToast("Email atau kata sandi salah.", "error");
+                } else {
+                    showToast("Gagal mendaftarkan akun.", "error");
+                }
             } finally {
                 btn.disabled = false;
             }
@@ -1024,7 +1230,7 @@
         async function kirimLinkResetPassword() {
             const email = document.getElementById('auth-email').value.trim().toLowerCase();
             if (!email || !email.includes('@')) {
-                showToast("Ketik email admin aktif Anda terlebih dahulu di kolom email!", "warning");
+                showToast("Isi kolom email terlebih dahulu.", "warning");
                 document.getElementById('auth-email').focus();
                 return;
             }
@@ -1033,9 +1239,9 @@
                     redirectTo: window.location.origin + window.location.pathname
                 });
                 if (error) throw error;
-                showToast(`Link reset password otomatis dikirim Supabase ke ${email}. Cek inbox/spam email Anda.`, "success");
+                showToast(`Link reset dikirim ke ${email}.`, "success");
             } catch (err) {
-                showToast("Gagal mengirim link reset: " + err.message, "error");
+                showToast("Gagal mengirim link reset.", "error");
             }
         }
 
@@ -1050,16 +1256,17 @@
 
                 document.getElementById('new-password-form').style.display = 'none';
                 document.getElementById('admin-auth-form').style.display = 'flex';
-                document.getElementById('login-tabs-wrap').style.display = 'flex';
+                document.getElementById('login-tabs-wrap').style.display = 'grid';
+                document.getElementById('auth-mode-banner').style.display = 'flex';
                 document.getElementById('new-admin-password').value = '';
                 history.replaceState(null, '', window.location.pathname);
 
-                showToast("Kata sandi baru berhasil disimpan!", "success");
+                showToast("Kata sandi berhasil diperbarui.", "success");
                 if (data && data.user) {
                     enterAdminDashboard(data.user);
                 }
             } catch (err) {
-                showToast("Gagal menyimpan kata sandi baru: " + err.message, "error");
+                showToast("Gagal memperbarui kata sandi.", "error");
             } finally {
                 btn.disabled = false;
             }
@@ -1068,6 +1275,7 @@
         function showRecoveryFormUI() {
             document.getElementById('login-gate').classList.remove('hidden');
             document.getElementById('login-tabs-wrap').style.display = 'none';
+            document.getElementById('auth-mode-banner').style.display = 'none';
             document.getElementById('admin-auth-form').style.display = 'none';
             document.getElementById('new-password-form').style.display = 'flex';
         }
@@ -1075,7 +1283,7 @@
         supabaseClient.auth.onAuthStateChange((event) => {
             if (event === 'PASSWORD_RECOVERY') {
                 showRecoveryFormUI();
-                showToast("Silakan masukkan kata sandi baru untuk akun admin Anda.", "warning");
+                showToast("Buat kata sandi baru Anda.", "warning");
             }
         });
 
@@ -1087,11 +1295,11 @@
 
         async function logoutAdmin() {
             await supabaseClient.auth.signOut();
-            document.getElementById('login-tabs-wrap').style.display = 'flex';
-            document.getElementById('new-password-form').style.display = 'none';
-            document.getElementById('admin-auth-form').style.display = 'flex';
+            document.getElementById('login-tabs-wrap').style.display = 'grid';
+            document.getElementById('auth-mode-banner').style.display = 'flex';
+            switchAuthTab('login');
             document.getElementById('login-gate').classList.remove('hidden');
-            showToast("Anda telah keluar dari akun Admin.", "warning");
+            showToast("Berhasil keluar.", "warning");
         }
 
         // ==========================================
@@ -1139,7 +1347,7 @@
         }
 
         // ==========================================
-        // AMBIL DATA SUPABASE (ANTI-LAG)
+        // AMBIL DATA DATABASE (ANTI-LAG)
         // ==========================================
         async function fetchAllSupabaseData(showNotif = false) {
             try {
@@ -1151,10 +1359,10 @@
                 if (error) throw error;
                 allRecords = Array.isArray(data) ? data : [];
                 applyFilters();
-                if (showNotif) showToast(`Sinkronisasi berhasil (${allRecords.length} data SPPG dimuat).`, "success");
+                if (showNotif) showToast(`Data diperbarui (${allRecords.length} unit).`, "success");
             } catch (err) {
                 console.error("Fetch error:", err);
-                showToast("Gagal memuat data dari Supabase: " + err.message, "error");
+                showToast("Gagal memuat data.", "error");
             }
         }
 
@@ -1198,7 +1406,7 @@
             document.getElementById('filter-kelurahan').innerHTML = '<option value="">-- Semua Kelurahan --</option>';
             document.getElementById('filter-sort').value = 'newest';
             applyFilters();
-            showToast("Filter pencarian telah direset.", "success");
+            showToast("Filter direset.", "success");
         }
 
         function updateStatistics() {
@@ -1371,10 +1579,10 @@
 
                 if (error) throw error;
                 closeEditModal();
-                showToast(`Data "${payload.nama_sppg}" berhasil diperbarui!`, "success");
+                showToast("Data berhasil diperbarui.", "success");
                 await fetchAllSupabaseData(false);
             } catch (err) {
-                showToast("Gagal memperbarui data: " + err.message, "error");
+                showToast("Gagal memperbarui data.", "error");
             } finally {
                 btn.disabled = false;
             }
@@ -1386,7 +1594,7 @@
             if (!item) return;
             pendingDeleteId = id;
             document.getElementById('confirm-title').textContent = "Hapus Data Permanen";
-            document.getElementById('confirm-message').textContent = `Yakin menghapus "${item.nama_sppg}" beserta file PDF evident-nya secara permanen dari server?`;
+            document.getElementById('confirm-message').textContent = `Hapus permanen "${item.nama_sppg}" beserta file PDF evident-nya?`;
             document.getElementById('confirmModal').classList.add('show');
         }
 
@@ -1402,7 +1610,6 @@
             closeConfirmModal();
 
             try {
-                // 1. Hapus file dari bucket evident_sppg jika ada
                 if (item && item.evident_lokasi) {
                     const urlParts = item.evident_lokasi.split('/evident_sppg/');
                     if (urlParts.length > 1) {
@@ -1411,17 +1618,16 @@
                     }
                 }
 
-                // 2. Hapus baris dari tabel data_sppg
                 const { error } = await supabaseClient
                     .from('data_sppg')
                     .delete()
                     .eq('id', id);
 
                 if (error) throw error;
-                showToast("Data dan file PDF berhasil dihapus permanen.", "success");
+                showToast("Data berhasil dihapus.", "success");
                 await fetchAllSupabaseData(false);
             } catch (err) {
-                showToast("Gagal menghapus data: " + err.message, "error");
+                showToast("Gagal menghapus data.", "error");
             }
         });
 
@@ -1441,7 +1647,7 @@
 
         async function downloadDirectPdf(url, filename) {
             try {
-                showToast("Mengunduh dokumen PDF...", "warning");
+                showToast("Mengunduh PDF...", "warning");
                 const response = await fetch(url);
                 const blob = await response.blob();
                 const blobUrl = URL.createObjectURL(blob);
@@ -1452,7 +1658,7 @@
                 a.click();
                 a.remove();
                 setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
-                showToast("Dokumen PDF berhasil diunduh!", "success");
+                showToast("PDF berhasil diunduh.", "success");
             } catch (err) {
                 window.open(url, '_blank');
             }
@@ -1464,56 +1670,239 @@
         }
 
         // ==========================================
-        // EXPORT EXCEL MULTI-SHEET (.XLSX)
+        // EXPORT EXCEL MULTI-SHEET BERWARNA & RAPI (.XLSX)
         // ==========================================
         function exportToExcelMultiSheet() {
             if (filteredRecords.length === 0) {
-                showToast("Tidak ada data untuk diexport ke Excel.", "warning");
+                showToast("Tidak ada data untuk diunduh.", "warning");
                 return;
             }
 
-            // Sheet 1: Rekapitulasi Per Kecamatan
+            const now = new Date();
+            const tglCetak = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+            const dateStr = now.toISOString().slice(0, 10);
+
+            const borderThin = {
+                top: { style: "thin", color: { rgb: "CBD5E1" } },
+                bottom: { style: "thin", color: { rgb: "CBD5E1" } },
+                left: { style: "thin", color: { rgb: "CBD5E1" } },
+                right: { style: "thin", color: { rgb: "CBD5E1" } }
+            };
+            const borderTotal = {
+                top: { style: "medium", color: { rgb: "1E3A8A" } },
+                bottom: { style: "double", color: { rgb: "1E3A8A" } },
+                left: { style: "thin", color: { rgb: "93C5FD" } },
+                right: { style: "thin", color: { rgb: "93C5FD" } }
+            };
+
+            const styleTitleBanner = {
+                font: { name: "Calibri", sz: 13, bold: true, color: { rgb: "FFFFFF" } },
+                fill: { fgColor: { rgb: "1E3A8A" } },
+                alignment: { horizontal: "center", vertical: "center" }
+            };
+            const styleSubBanner = {
+                font: { name: "Calibri", sz: 10, italic: true, bold: true, color: { rgb: "1E3A8A" } },
+                fill: { fgColor: { rgb: "DBEAFE" } },
+                alignment: { horizontal: "center", vertical: "center" }
+            };
+            const styleTableHeader = {
+                font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } },
+                fill: { fgColor: { rgb: "2563EB" } },
+                alignment: { horizontal: "center", vertical: "center", wrapText: true },
+                border: {
+                    top: { style: "thin", color: { rgb: "1E3A8A" } },
+                    bottom: { style: "medium", color: { rgb: "1E3A8A" } },
+                    left: { style: "thin", color: { rgb: "60A5FA" } },
+                    right: { style: "thin", color: { rgb: "60A5FA" } }
+                }
+            };
+
+            // ==========================================
+            // SHEET 1: REKAP PER KECAMATAN
+            // ==========================================
             const rekapMap = {};
             Object.keys(wilayahBandung).sort().forEach(kec => {
-                rekapMap[kec] = { Kecamatan: kec, "Jumlah Unit SPPG": 0, "Total Pegawai": 0, "Total Penerima Manfaat": 0 };
+                rekapMap[kec] = { kecamatan: kec, unit: 0, pegawai: 0, penerima: 0 };
             });
 
             filteredRecords.forEach(item => {
                 const k = item.kecamatan || 'Lainnya';
-                if (!rekapMap[k]) rekapMap[k] = { Kecamatan: k, "Jumlah Unit SPPG": 0, "Total Pegawai": 0, "Total Penerima Manfaat": 0 };
-                rekapMap[k]["Jumlah Unit SPPG"] += 1;
-                rekapMap[k]["Total Pegawai"] += Number(item.jumlah_pegawai) || 0;
-                rekapMap[k]["Total Penerima Manfaat"] += Number(item.jumlah_penerima) || 0;
+                if (!rekapMap[k]) rekapMap[k] = { kecamatan: k, unit: 0, pegawai: 0, penerima: 0 };
+                rekapMap[k].unit += 1;
+                rekapMap[k].pegawai += Number(item.jumlah_pegawai) || 0;
+                rekapMap[k].penerima += Number(item.jumlah_penerima) || 0;
             });
 
-            const sheet1Data = Object.values(rekapMap);
+            const rekapList = Object.values(rekapMap);
+            let sumUnit = 0, sumPegawai = 0, sumPenerima = 0;
 
-            // Sheet 2: Detail Seluruh Data SPPG
-            const sheet2Data = filteredRecords.map((item, idx) => ({
-                "No": idx + 1,
-                "Nama SPPG": item.nama_sppg || '-',
-                "Kecamatan": item.kecamatan || '-',
-                "Kelurahan": item.kelurahan || '-',
-                "Alamat Lengkap": item.alamat || '-',
-                "Kepala SPPG": item.kepala_sppg || '-',
-                "Jumlah Pegawai": Number(item.jumlah_pegawai) || 0,
-                "Penerima Manfaat / Sekolah": Number(item.jumlah_penerima) || 0,
-                "Link Evident PDF": item.evident_lokasi || '-'
-            }));
+            const ws1Aoa = [
+                ["REKAPITULASI DATA SPPG & KMP KOTA BANDUNG PER KECAMATAN", "", "", "", ""],
+                [`Bagian Tata Pemerintahan Kota Bandung  •  Dicetak pada: ${tglCetak}`, "", "", "", ""],
+                ["", "", "", "", ""],
+                ["No", "Kecamatan", "Jumlah Unit SPPG", "Total Pegawai", "Total Penerima Manfaat"]
+            ];
+
+            rekapList.forEach((row, idx) => {
+                sumUnit += row.unit;
+                sumPegawai += row.pegawai;
+                sumPenerima += row.penerima;
+                ws1Aoa.push([idx + 1, row.kecamatan, row.unit, row.pegawai, row.penerima]);
+            });
+
+            ws1Aoa.push(["", "TOTAL KESELURUHAN", sumUnit, sumPegawai, sumPenerima]);
+
+            const ws1 = XLSX.utils.aoa_to_sheet(ws1Aoa);
+            ws1['!merges'] = [
+                { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
+                { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } }
+            ];
+            ws1['!cols'] = [{ wch: 6 }, { wch: 26 }, { wch: 20 }, { wch: 18 }, { wch: 24 }];
+            ws1['!rows'] = [{ hpt: 28 }, { hpt: 20 }, { hpt: 10 }, { hpt: 26 }];
+
+            for (let c = 0; c < 5; c++) {
+                ws1[XLSX.utils.encode_cell({ r: 0, c })].s = styleTitleBanner;
+                ws1[XLSX.utils.encode_cell({ r: 1, c })].s = styleSubBanner;
+                ws1[XLSX.utils.encode_cell({ r: 3, c })].s = styleTableHeader;
+            }
+
+            const totalRowIdx1 = ws1Aoa.length - 1;
+            for (let r = 4; r < totalRowIdx1; r++) {
+                ws1['!rows'][r] = { hpt: 21 };
+                const rowBg = (r % 2 === 0) ? "FFFFFF" : "F0F7FF";
+                for (let c = 0; c < 5; c++) {
+                    const ref = XLSX.utils.encode_cell({ r, c });
+                    const isNum = c >= 2;
+                    ws1[ref].s = {
+                        font: { name: "Calibri", sz: 10.5, bold: c === 1, color: { rgb: "0F172A" } },
+                        fill: { fgColor: { rgb: rowBg } },
+                        alignment: { horizontal: c === 0 ? "center" : isNum ? "right" : "left", vertical: "center" },
+                        border: borderThin,
+                        numFmt: isNum ? "#,##0" : undefined
+                    };
+                }
+            }
+
+            ws1['!rows'][totalRowIdx1] = { hpt: 24 };
+            for (let c = 0; c < 5; c++) {
+                const ref = XLSX.utils.encode_cell({ r: totalRowIdx1, c });
+                const isNum = c >= 2;
+                ws1[ref].s = {
+                    font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "1E3A8A" } },
+                    fill: { fgColor: { rgb: "DBEAFE" } },
+                    alignment: { horizontal: c === 1 ? "left" : isNum ? "right" : "center", vertical: "center" },
+                    border: borderTotal,
+                    numFmt: isNum ? "#,##0" : undefined
+                };
+            }
+
+            // ==========================================
+            // SHEET 2: DETAIL SELURUH DATA SPPG
+            // ==========================================
+            const ws2Aoa = [
+                ["DAFTAR DETAIL UNIT SPPG & KMP KOTA BANDUNG", "", "", "", "", "", "", "", ""],
+                [`Total Data Terlampir: ${filteredRecords.length} Unit  •  Dicetak pada: ${tglCetak}`, "", "", "", "", "", "", "", ""],
+                ["", "", "", "", "", "", "", "", ""],
+                ["No", "Nama SPPG", "Kecamatan", "Kelurahan", "Alamat Lengkap", "Kepala SPPG", "Jumlah Pegawai", "Penerima Manfaat", "Tautan Evident PDF"]
+            ];
+
+            let detailSumPegawai = 0;
+            let detailSumPenerima = 0;
+
+            filteredRecords.forEach((item, idx) => {
+                const peg = Number(item.jumlah_pegawai) || 0;
+                const pen = Number(item.jumlah_penerima) || 0;
+                detailSumPegawai += peg;
+                detailSumPenerima += pen;
+
+                ws2Aoa.push([
+                    idx + 1,
+                    item.nama_sppg || '-',
+                    item.kecamatan || '-',
+                    item.kelurahan || '-',
+                    item.alamat || '-',
+                    item.kepala_sppg || '-',
+                    peg,
+                    pen,
+                    item.evident_lokasi || '-'
+                ]);
+            });
+
+            ws2Aoa.push(["", "TOTAL KESELURUHAN", "", "", "", "", detailSumPegawai, detailSumPenerima, ""]);
+
+            const ws2 = XLSX.utils.aoa_to_sheet(ws2Aoa);
+            ws2['!merges'] = [
+                { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } },
+                { s: { r: 1, c: 0 }, e: { r: 1, c: 8 } }
+            ];
+            ws2['!cols'] = [
+                { wch: 6 },
+                { wch: 28 },
+                { wch: 18 },
+                { wch: 20 },
+                { wch: 38 },
+                { wch: 24 },
+                { wch: 16 },
+                { wch: 18 },
+                { wch: 44 }
+            ];
+            ws2['!rows'] = [{ hpt: 28 }, { hpt: 20 }, { hpt: 10 }, { hpt: 26 }];
+
+            for (let c = 0; c < 9; c++) {
+                ws2[XLSX.utils.encode_cell({ r: 0, c })].s = styleTitleBanner;
+                ws2[XLSX.utils.encode_cell({ r: 1, c })].s = styleSubBanner;
+                ws2[XLSX.utils.encode_cell({ r: 3, c })].s = styleTableHeader;
+            }
+
+            const totalRowIdx2 = ws2Aoa.length - 1;
+            for (let r = 4; r < totalRowIdx2; r++) {
+                const alamatLen = String(ws2Aoa[r][4] || '').length;
+                ws2['!rows'][r] = { hpt: alamatLen > 45 ? 32 : 22 };
+                const rowBg = (r % 2 === 0) ? "FFFFFF" : "F0F7FF";
+
+                for (let c = 0; c < 9; c++) {
+                    const ref = XLSX.utils.encode_cell({ r, c });
+                    const isNum = c === 6 || c === 7;
+                    const isLink = c === 8 && ws2Aoa[r][8] !== '-';
+                    ws2[ref].s = {
+                        font: {
+                            name: "Calibri",
+                            sz: 10.5,
+                            bold: c === 1,
+                            underline: isLink,
+                            color: { rgb: isLink ? "2563EB" : "0F172A" }
+                        },
+                        fill: { fgColor: { rgb: rowBg } },
+                        alignment: {
+                            horizontal: c === 0 ? "center" : isNum ? "right" : "left",
+                            vertical: "center",
+                            wrapText: c === 1 || c === 4
+                        },
+                        border: borderThin,
+                        numFmt: isNum ? "#,##0" : undefined
+                    };
+                }
+            }
+
+            ws2['!rows'][totalRowIdx2] = { hpt: 24 };
+            for (let c = 0; c < 9; c++) {
+                const ref = XLSX.utils.encode_cell({ r: totalRowIdx2, c });
+                const isNum = c === 6 || c === 7;
+                ws2[ref].s = {
+                    font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "1E3A8A" } },
+                    fill: { fgColor: { rgb: "DBEAFE" } },
+                    alignment: { horizontal: c === 1 ? "left" : isNum ? "right" : "center", vertical: "center" },
+                    border: borderTotal,
+                    numFmt: isNum ? "#,##0" : undefined
+                };
+            }
 
             const wb = XLSX.utils.book_new();
-            const ws1 = XLSX.utils.json_to_sheet(sheet1Data);
-            const ws2 = XLSX.utils.json_to_sheet(sheet2Data);
-
-            ws1['!cols'] = [{ wch: 24 }, { wch: 20 }, { wch: 18 }, { wch: 24 }];
-            ws2['!cols'] = [{ wch: 5 }, { wch: 28 }, { wch: 18 }, { wch: 20 }, { wch: 35 }, { wch: 25 }, { wch: 16 }, { wch: 24 }, { wch: 45 }];
-
             XLSX.utils.book_append_sheet(wb, ws1, "Rekap Per Kecamatan");
             XLSX.utils.book_append_sheet(wb, ws2, "Detail Data SPPG");
 
-            const dateStr = new Date().toISOString().slice(0, 10);
             XLSX.writeFile(wb, `Rekapitulasi_SPPG_KMP_Bandung_${dateStr}.xlsx`);
-            showToast("File Excel multi-sheet berhasil diunduh!", "success");
+            showToast("File Excel berhasil diunduh.", "success");
         }
 
         function toggleSidebar() {
