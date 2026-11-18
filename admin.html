@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Rekapitulasi SPPG & KMP - Kota Bandung</title>
+    <link rel="icon" href="logo-bagtapem.png" type="image/png">
+    
+    <!-- Modern Geometric & UI Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase JS Client & SheetJS (Export Excel Multi-Sheet) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        :root {
+            --bg-app: #f4f8ff; 
+            --sidebar-bg: rgba(255, 255, 255, 0.95); 
+            --sidebar-border: rgba(37, 99, 235, 0.14); 
+            --text-primary: #0f172a;
+            --text-navy: #1e3a8a;
+            --text-secondary: #475569; 
+            --accent: #2563eb;
+            --accent-cyan: #0ea5e9;
+            --accent-deep: #1e3a8a;
+            --danger: #ef4444; 
+            --warning: #d97706;
+            --success: #10b981; 
+            --card-bg: rgba(255, 255, 255, 0.96); 
+            --card-shadow: 0 8px 24px rgba(30, 58, 138, 0.06);
+            --value-bg: #f0f7ff; 
+            --value-border: #dbeafe; 
+            --radius-lg: 16px;
+            --radius-md: 10px; 
+            --radius-sm: 8px;
+        }
+
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; }
+        
+        body { 
+            background: radial-gradient(circle at 15% 20%, #1e3a8a 0%, #0f172a 45%, #020617 100%);
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            padding: 2.5vh 2.5vw; 
+            overflow: hidden;
+            position: relative;
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Ambient Orbs Ringan (GPU Accelerated) */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(70px);
+            z-index: 0;
+            pointer-events: none;
+            will-change: transform;
+            animation: orbFloat 14s ease-in-out infinite alternate;
+        }
+        body::before { width: 380px; height: 380px; background: rgba(14, 165, 233, 0.22); top: -80px; left: 10%; }
+        body::after { width: 420px; height: 420px; background: rgba(37, 99, 235, 0.25); bottom: -100px; right: 8%; animation-delay: -7s; }
+
+        @keyframes orbFloat { 0% { transform: translate3d(0, 0, 0) scale(1); } 100% { transform: translate3d(30px, -25px, 0) scale(1.08); } }
+        @keyframes containerAppear { from { opacity: 0; transform: scale(0.98) translate3d(0, 12px, 0); } to { opacity: 1; transform: scale(1) translate3d(0, 0, 0); } }
+        @keyframes gradientFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translate3d(0, 8px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+        @keyframes pulseHalo { 0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4); } 70% { box-shadow: 0 0 0 12px rgba(14, 165, 233, 0); } 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); } }
+        @keyframes rippleEffect { to { transform: scale(4); opacity: 0; } }
+
+        /* LOGIN GATE OVERLAY */
+        .login-gate {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: radial-gradient(circle at 20% 20%, rgba(30, 58, 138, 0.96) 0%, rgba(2, 6, 23, 0.98) 100%);
+            backdrop-filter: blur(10px);
+        }
+        .login-gate.hidden { display: none; }
+        .login-card {
+            background: rgba(255, 255, 255, 0.97);
+            width: 410px;
+            max-width: 100%;
+            border-radius: 20px;
+            padding: 32px 28px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(191, 219, 254, 0.9);
+            animation: containerAppear 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .login-brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 22px;
+        }
+        .login-logos {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .login-logos img {
+            height: 44px;
+            width: auto;
+            object-fit: contain;
+            background: #fff;
+            padding: 4px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.14);
+        }
+        .login-brand h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--accent-deep);
+            margin-bottom: 4px;
+        }
+        .login-brand p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .login-tabs {
+            display: flex;
+            background: #eff6ff;
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            border: 1px solid #dbeafe;
+        }
+        .login-tab-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            background: transparent;
+            border-radius: 9px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .login-tab-btn.active {
+            background: #ffffff;
+            color: var(--accent-deep);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+        }
+        .forgot-link-btn {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 0;
+            transition: color 0.2s ease;
+        }
+        .forgot-link-btn:hover {
+            color: var(--accent-deep);
+            text-decoration: underline;
+        }
+
+        /* MAIN APP CONTAINER */
+        .inner-container { 
+            background: linear-gradient(145deg, #f8fbff 0%, #eef5ff 100%);
+            width: 100%; 
+            max-width: 1600px; 
+            height: 95vh; 
+            display: flex; 
+            border-radius: 18px; 
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 24px 65px rgba(2, 6, 23, 0.6); 
+            overflow: hidden; 
+            position: relative; 
+            z-index: 1;
+            animation: containerAppear 0.55s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+
+        /* SIDEBAR FILTER & KONTROL ADMIN */
+        .sidebar { 
+            width: 315px; 
+            background: var(--sidebar-bg); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            display: flex; 
+            flex-direction: column; 
+            flex-shrink: 0; 
+            border-right: 1px solid var(--sidebar-border); 
+            box-shadow: 4px 0 24px rgba(30, 58, 138, 0.04);
+            z-index: 20; 
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+        .sidebar-header { 
+            padding: 15px 18px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            gap: 11px; 
+            border-bottom: 1px solid var(--sidebar-border); 
+            background: linear-gradient(135deg, rgba(239, 246, 255, 0.96) 0%, rgba(224, 242, 254, 0.7) 100%);
+        }
+        .header-brand-wrap { display: flex; align-items: center; gap: 11px; }
+        .brand-logo-img { 
+            width: 40px; height: 40px; 
+            object-fit: contain; 
+            border-radius: 10px; 
+            padding: 3px;
+            background: #ffffff;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.14);
+        }
+        .brand-text h1 { font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; color: var(--accent-deep); margin-bottom: 2px; }
+        .brand-text p { 
+            color: #065f46; 
+            font-size: 10px; 
+            font-weight: 700; 
+            background: #d1fae5;
+            padding: 2px 8px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .sidebar-content { padding: 15px 18px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 11px; }
+        .sidebar-content::-webkit-scrollbar { width: 4px; }
+        .sidebar-content::-webkit-scrollbar-thumb { background: rgba(37, 99, 235, 0.22); border-radius: 10px; }
+
+        .admin-profile-box {
+            background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
+            border: 1px solid #bfdbfe;
+            border-radius: var(--radius-md);
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .admin-profile-info { min-width: 0; }
+        .admin-profile-info span { display: block; font-size: 10px; font-weight: 700; color: #0284c7; text-transform: uppercase; }
+        .admin-profile-info strong { display: block; font-size: 12px; color: var(--accent-deep); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .form-label { 
+            color: var(--text-navy); 
+            font-size: 11px; 
+            font-weight: 700; 
+            display: flex; 
+            align-items: center;
+            gap: 6px;
+        }
+        .form-label::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #0ea5e9);
+        }
+        
+        .custom-select, .custom-input, .custom-textarea { 
+            width: 100%; 
+            padding: 9px 12px; 
+            background: #f0f7ff; 
+            border: 1.5px solid #dbeafe; 
+            border-radius: var(--radius-md); 
+            color: var(--text-primary); 
+            font-size: 12px; 
+            font-weight: 600; 
+            outline: none; 
+            transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease; 
+        }
+        .custom-select { 
+            appearance: none; 
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); 
+            background-repeat: no-repeat; 
+            background-position: right 0.85rem center; 
+            background-size: 0.9em; 
+            padding-right: 2.1rem;
+            cursor: pointer; 
+        }
+        .custom-select:focus, .custom-input:focus, .custom-textarea:focus { 
+            border-color: var(--accent); 
+            background-color: #ffffff; 
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.16); 
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 4px; }
+
+        .sidebar-footer { 
+            padding: 12px 18px; 
+            border-top: 1px solid var(--sidebar-border); 
+            display: flex; 
+            flex-direction: column;
+            gap: 8px; 
+            background: #f8fbff; 
+        }
+        .footer-row { display: flex; gap: 8px; width: 100%; }
+
+        .btn, .btn-excel, .action-btn { position: relative; overflow: hidden; }
+        .ripple-btn > span:not(.ripple) { display: flex; align-items: center; justify-content: center; gap: 7px; white-space: nowrap; position: relative; z-index: 3; }
+        .ripple { position: absolute; border-radius: 50%; transform: scale(0); animation: rippleEffect 0.55s linear; background-color: rgba(255, 255, 255, 0.4); pointer-events: none; z-index: 2; }
+
+        .btn { padding: 9.5px 12px; border-radius: var(--radius-md); font-size: 12px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: transform 0.2s ease, background-color 0.2s ease; }
+        .btn:active { transform: scale(0.97); }
+        .btn-reset { background: #eff6ff; color: var(--accent-deep); border: 1px solid #bfdbfe; flex: 1; }
+        .btn-reset:hover { background: #dbeafe; }
+        .btn-refresh { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #0ea5e9 100%); color: white; flex: 1.4; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.22); }
+        .btn-refresh:hover { transform: translateY(-1px); }
+        .btn-logout { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; width: 100%; }
+        .btn-logout:hover { background: var(--danger); color: #ffffff; }
+
+        /* MAIN WORKSPACE */
+        .main-workspace { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            position: relative; 
+            background: linear-gradient(135deg, #f8fbff 0%, #eef6ff 50%, #e0f2fe 100%); 
+        }
+
+        .workspace-emboss-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .workspace-emboss-layer::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 65% 45%, rgba(37, 99, 235, 0.03) 0%, rgba(14, 165, 233, 0.06) 45%, rgba(244, 248, 255, 0.92) 85%);
+        }
+        .emboss-bg-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%) contrast(120%) brightness(105%);
+            opacity: 0.08;
+            mix-blend-mode: multiply;
+            -webkit-mask-image: radial-gradient(circle at 58% 52%, rgba(0,0,0,1) 15%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0) 85%);
+            mask-image: radial-gradient(circle at 58% 52%, rgba(0,0,0,1) 15%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0) 85%);
+        }
+        .emboss-bg-img.fallback-logo {
+            width: 380px;
+            height: 380px;
+            object-fit: contain;
+            opacity: 0.06;
+        }
+
+        .topbar { 
+            background: rgba(255, 255, 255, 0.92); 
+            backdrop-filter: blur(10px);
+            height: 70px; 
+            padding: 0 26px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid rgba(37, 99, 235, 0.12); 
+            z-index: 10; 
+            box-shadow: 0 4px 18px rgba(30, 58, 138, 0.04); 
+            position: relative;
+        }
+        .topbar::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #1e3a8a, #2563eb, #0ea5e9, #38bdf8, #2563eb, #1e3a8a);
+            background-size: 200% 200%;
+            animation: gradientFlow 7s ease infinite;
+        }
+
+        .topbar-left { display: flex; align-items: center; gap: 12px; }
+        .header-logo-img { height: 38px; width: auto; object-fit: contain; }
+        .topbar-title { 
+            font-family: 'Outfit', sans-serif;
+            font-size: 18px; 
+            font-weight: 800; 
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #0284c7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+        .btn-excel { 
+            background: linear-gradient(135deg, #059669 0%, #10b981 60%, #0ea5e9 100%); 
+            color: white; 
+            padding: 10px 20px; 
+            border-radius: 30px; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: 700; 
+            font-size: 12px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.25);
+            transition: transform 0.2s ease; 
+        }
+        .btn-excel:hover { transform: translateY(-2px); }
+
+        .mobile-toggle, .mobile-close { display: none; background: none; border: none; font-size: 20px; color: var(--accent-deep); cursor: pointer; }
+
+        .workspace-content { 
+            padding: 20px 26px 80px 26px; 
+            overflow-y: auto; 
+            flex: 1; 
+            position: relative;
+            z-index: 2;
+        }
+        .workspace-content::-webkit-scrollbar { width: 7px; }
+        .workspace-content::-webkit-scrollbar-thumb { background: #93c5fd; border-radius: 10px; }
+
+        /* STAT CARDS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(191, 219, 254, 0.9);
+            border-radius: var(--radius-lg);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            box-shadow: var(--card-shadow);
+        }
+        .stat-icon {
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .stat-blue { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+        .stat-cyan { background: #ecfeff; color: #0891b2; border: 1px solid #a5f3fc; }
+        .stat-green { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+        .stat-amber { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+        .stat-info span { display: block; font-size: 11px; font-weight: 700; color: var(--text-secondary); }
+        .stat-info strong { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 800; color: var(--accent-deep); }
+
+        /* TOOLBAR */
+        .workspace-toolbar { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 18px; 
+            background: rgba(255, 255, 255, 0.92); 
+            padding: 12px 18px; 
+            border-radius: var(--radius-lg); 
+            border: 1px solid rgba(191, 219, 254, 0.85); 
+            box-shadow: var(--card-shadow); 
+            flex-wrap: wrap; 
+            gap: 10px; 
+        }
+        .toolbar-tabs { display: flex; align-items: center; gap: 8px; }
+        .tab-badge-btn { 
+            display: flex; align-items: center; gap: 7px; 
+            background: #f8fafc; color: var(--text-secondary); 
+            padding: 7.5px 15px; border-radius: 30px; 
+            font-size: 12px; font-weight: 700; 
+            border: 1px solid #cbd5e1; cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .tab-badge-btn.active {
+            background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%); 
+            color: var(--accent-deep); 
+            border: 1.5px solid #3b82f6; 
+        }
+
+        /* CARDS GRID */
+        .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(315px, 1fr)); gap: 18px; }
+        .data-card { 
+            background: var(--card-bg); 
+            border-radius: var(--radius-lg); 
+            border: 1px solid rgba(191, 219, 254, 0.85); 
+            padding: 18px; 
+            position: relative; 
+            box-shadow: var(--card-shadow); 
+            transition: transform 0.25s ease, border-color 0.25s ease; 
+            overflow: hidden;
+        }
+        .data-card:hover { transform: translateY(-3px); border-color: #60a5fa; }
+        .card-decoration { position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #0ea5e9 100%); }
+        .card-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+        .card-header-left { display: flex; align-items: center; gap: 11px; min-width: 0; }
+        .card-icon { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); color: var(--accent); border: 1px solid #bfdbfe; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+        .card-title { font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; color: var(--accent-deep); line-height: 1.3; word-break: break-word; }
+        .status-pill-verified { background: #dcfce7; color: #166534; border: 1px solid #86efac; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+
+        .data-list { display: flex; flex-direction: column; gap: 8px; }
+        .data-item { display: flex; flex-direction: column; gap: 2px; }
+        .data-label { font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.4px; }
+        .data-value { font-size: 12px; font-weight: 600; color: var(--text-primary); line-height: 1.45; padding: 7px 10px; background: var(--value-bg); border-radius: var(--radius-sm); border: 1px solid var(--value-border); word-break: break-word; }
+        .data-value.file-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+        .btn-mini-preview { background: var(--accent); color: #ffffff; border: none; border-radius: 6px; padding: 4px 9px; font-size: 10.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; }
+        .btn-mini-preview:hover { background: var(--accent-deep); }
+
+        .card-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; padding-top: 11px; border-top: 1px dashed #bfdbfe; }
+        .action-btn { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s ease; }
+        .action-edit { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+        .action-edit:hover { background: #f59e0b; color: white; }
+        .action-delete { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+        .action-delete:hover { background: var(--danger); color: white; }
+
+        /* TABLE VIEW */
+        .table-wrapper {
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: var(--radius-lg);
+            border: 1px solid #bfdbfe;
+            box-shadow: var(--card-shadow);
+            overflow-x: auto;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background: #eff6ff; color: var(--accent-deep); font-weight: 700; text-align: left; padding: 12px 14px; border-bottom: 1.5px solid #bfdbfe; white-space: nowrap; }
+        td { padding: 11px 14px; border-bottom: 1px solid #e2e8f0; color: var(--text-primary); font-weight: 500; vertical-align: middle; }
+        tr:hover td { background: #f8fbff; }
+
+        /* EMPTY STATE */
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 45vh; text-align: center; }
+        .empty-icon { width: 76px; height: 76px; background: linear-gradient(135deg, #ffffff 0%, #dbeafe 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--accent); margin-bottom: 14px; border: 2px solid #93c5fd; }
+        .empty-state h3 { font-family: 'Outfit', sans-serif; font-size: 19px; color: var(--accent-deep); margin-bottom: 6px; }
+        .empty-state p { font-size: 12.5px; color: var(--text-secondary); max-width: 380px; }
+
+        /* FLOATING HELP */
+        .floating-contact-btn { 
+            position: absolute; bottom: 20px; right: 26px; 
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #0ea5e9 100%); 
+            color: white; height: 44px; padding: 0 18px; border-radius: 50px; 
+            display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; 
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.32); cursor: pointer; 
+            border: 1.5px solid rgba(255, 255, 255, 0.45); z-index: 30; 
+            animation: pulseHalo 3.5s infinite;
+        }
+
+        /* MODALS & TOAST */
+        #toast-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .custom-toast { background: #ffffff; border-radius: var(--radius-md); box-shadow: 0 10px 26px rgba(15, 23, 42, 0.16); padding: 13px 16px; display: flex; align-items: center; gap: 11px; min-width: 270px; max-width: 390px; border-left: 4px solid; pointer-events: all; }
+        .custom-toast.success { border-left-color: var(--success); } .custom-toast.error { border-left-color: var(--danger); } .custom-toast.warning { border-left-color: var(--warning); }
+        .toast-text { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(2, 6, 23, 0.65); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); padding: 16px; }
+        .modal-overlay.show { display: flex !important; }
+        .modal-box { background: white; border-radius: var(--radius-lg); width: 440px; max-width: 100%; padding: 22px; border: 1px solid #dbeafe; box-shadow: 0 22px 50px rgba(2, 6, 23, 0.35); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #e0f2fe; padding-bottom: 10px; gap: 10px; }
+        .modal-header h3 { font-family: 'Outfit', sans-serif; font-size: 16.5px; font-weight: 700; color: var(--accent-deep); display: flex; align-items: center; gap: 8px; }
+        .close-modal { background: #eff6ff; border: none; width: 30px; height: 30px; border-radius: 50%; color: var(--accent-deep); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .close-modal:hover { background: #fee2e2; color: var(--danger); }
+
+        .pdf-modal-box { width: 880px; max-width: 95vw; height: 86vh; display: flex; flex-direction: column; padding: 18px; }
+        .pdf-frame-container { flex: 1; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: var(--radius-md); overflow: hidden; }
+        .pdf-frame-container iframe { width: 100%; height: 100%; border: none; }
+
+        .confirm-actions { display: flex; gap: 10px; margin-top: 18px; }
+        .confirm-actions button { flex: 1; padding: 10px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 700; cursor: pointer; border: none; }
+        .btn-cancel-confirm { background: #eff6ff; color: var(--accent-deep); }
+        .btn-yes-confirm { background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white; }
+        .btn-yes-danger { background: var(--danger); color: white; }
+
+        .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(2, 6, 23, 0.55); z-index: 15; }
+
+        @media (max-width: 1100px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 900px) {
+            body { padding: 0; }
+            .inner-container { border-radius: 0; height: 100vh; flex-direction: column; }
+            .mobile-toggle, .mobile-close { display: block; }
+            .sidebar { position: absolute; height: 100%; transform: translateX(-100%); z-index: 25; background: #ffffff; }
+            .sidebar.active { transform: translateX(0); }
+            .mobile-overlay.show { display: block; }
+            .topbar { padding: 0 16px; }
+            .topbar-title { font-size: 14.5px; }
+            .workspace-content { padding: 16px 16px 75px 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PORTAL LOGIN MASTER ADMIN -->
+    <div class="login-gate" id="login-gate">
+        <div class="login-card">
+            <div class="login-brand">
+                <div class="login-logos">
+                    <img src="logo-pemkot.png" alt="Logo Pemkot" onerror="this.src='https://via.placeholder.com/50?text=Pemkot'">
+                    <img src="logo-bagtapem.png" alt="Logo Bagtapem" onerror="this.src='https://via.placeholder.com/50?text=Bagtapem'">
+                </div>
+                <h2>Portal Master Admin</h2>
+                <p>Rekapitulasi SPPG & KMP Kota Bandung</p>
+            </div>
+
+            <div class="login-tabs" id="login-tabs-wrap">
+                <button type="button" class="login-tab-btn active" id="auth-tab-login" onclick="switchAuthTab('login')">Masuk Admin</button>
+                <button type="button" class="login-tab-btn" id="auth-tab-signup" onclick="switchAuthTab('signup')">Daftar Admin Baru</button>
+            </div>
+
+            <!-- FORM LOGIN / DAFTAR ADMIN -->
+            <form id="admin-auth-form" onsubmit="handleAdminAuth(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <div class="input-group">
+                    <label class="form-label">Email Admin (Wajib awalan admin@)</label>
+                    <input type="email" id="auth-email" class="custom-input" placeholder="admin@bagtapem.bandung.go.id" required>
+                </div>
+                <div class="input-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <label class="form-label">Kata Sandi</label>
+                        <button type="button" class="forgot-link-btn" onclick="kirimLinkResetPassword()">Lupa Password?</button>
+                    </div>
+                    <input type="password" id="auth-password" class="custom-input" placeholder="Minimal 6 karakter..." minlength="6" required>
+                </div>
+                <button type="submit" class="btn btn-refresh ripple-btn" id="btn-auth-submit" style="width:100%; padding:11px; margin-top:4px;">
+                    <span><i class="fas fa-lock-open"></i> Masuk ke Dashboard Admin</span>
+                </button>
+            </form>
+
+            <!-- FORM GANTI PASSWORD BARU (OTOMATIS MUNCUL SAAT KLIK LINK EMAIL RESET) -->
+            <form id="new-password-form" onsubmit="simpanPasswordBaru(event)" style="display:none; flex-direction:column; gap:12px;">
+                <div style="background:#eff6ff; border:1px solid #bfdbfe; padding:10px 12px; border-radius:10px; font-size:11.5px; color:var(--accent-deep); font-weight:600;">
+                    <i class="fas fa-shield-alt" style="color:var(--accent);"></i> Verifikasi link email berhasil. Silakan buat kata sandi baru untuk akun admin Anda.
+                </div>
+                <div class="input-group">
+                    <label class="form-label">Kata Sandi Baru</label>
+                    <input type="password" id="new-admin-password" class="custom-input" placeholder="Minimal 6 karakter..." minlength="6" required>
+                </div>
+                <button type="submit" class="btn btn-refresh ripple-btn" id="btn-save-new-pass" style="width:100%; padding:11px;">
+                    <span><i class="fas fa-key"></i> Simpan Kata Sandi Baru</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD CONTAINER -->
+    <div class="inner-container">
+        <div class="mobile-overlay" id="mobile-overlay" onclick="toggleSidebar()"></div>
+
+        <!-- SIDEBAR FILTER & KONTROL -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="header-brand-wrap">
+                    <img src="logo-pemkot.png" alt="Logo Pemkot" class="brand-logo-img" onerror="this.src='https://via.placeholder.com/50?text=Logo'">
+                    <div class="brand-text">
+                        <h1>Admin SPPG</h1>
+                        <p>Master Rekapitulasi</p>
+                    </div>
+                </div>
+                <button class="mobile-close" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="sidebar-content">
+                <div class="admin-profile-box">
+                    <div class="admin-profile-info">
+                        <span><i class="fas fa-user-shield"></i> Administrator Aktif</span>
+                        <strong id="admin-email-display">admin@bagtapem</strong>
+                    </div>
+                    <i class="fas fa-check-circle" style="color: #10b981; font-size: 16px;"></i>
+                </div>
+
+                <div class="input-group">
+                    <label class="form-label">Cari Nama SPPG / Kepala / Alamat</label>
+                    <input type="text" id="filter-search" class="custom-input" placeholder="Ketik kata kunci pencarian..." oninput="debouncedFilter()">
+                </div>
+
+                <div class="input-group">
+                    <label class="form-label">Filter Kecamatan</label>
+                    <select id="filter-kecamatan" class="custom-select" onchange="onFilterKecamatanChange()">
+                        <option value="">-- Semua Kecamatan (30) --</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label class="form-label">Filter Kelurahan</label>
+                    <select id="filter-kelurahan" class="custom-select" onchange="applyFilters()">
+                        <option value="">-- Semua Kelurahan --</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label class="form-label">Urutkan Data</label>
+                    <select id="filter-sort" class="custom-select" onchange="applyFilters()">
+                        <option value="newest">Terbaru Masuk</option>
+                        <option value="oldest">Terlama Masuk</option>
+                        <option value="sppg_asc">Nama SPPG (A - Z)</option>
+                        <option value="kec_asc">Kecamatan (A - Z)</option>
+                        <option value="penerima_desc">Penerima Manfaat Terbanyak</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="footer-row">
+                    <button type="button" class="btn btn-reset ripple-btn" onclick="resetFilters()">
+                        <span><i class="fas fa-undo"></i> Reset</span>
+                    </button>
+                    <button type="button" class="btn btn-refresh ripple-btn" onclick="fetchAllSupabaseData(true)">
+                        <span><i class="fas fa-sync-alt"></i> Sinkron Data</span>
+                    </button>
+                </div>
+                <button type="button" class="btn btn-logout ripple-btn" onclick="logoutAdmin()">
+                    <span><i class="fas fa-sign-out-alt"></i> Keluar Akun Admin</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- MAIN WORKSPACE -->
+        <div class="main-workspace">
+            <div class="workspace-emboss-layer">
+                <img src="bg-bandung.jpg" alt="Latar Emboss Bandung" class="emboss-bg-img" onerror="this.onerror=null; this.src='logo-bagtapem.png'; this.classList.add('fallback-logo');">
+            </div>
+
+            <div class="topbar">
+                <div class="topbar-left">
+                    <button class="mobile-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                    <img src="logo-bagtapem.png" alt="Logo Bagtapem" class="header-logo-img" onerror="this.src='https://via.placeholder.com/150x50?text=Logo'">
+                    <div class="topbar-title">Dashboard Admin SPPG & KMP Kota Bandung</div>
+                </div>
+                <div class="topbar-actions">
+                    <button type="button" class="btn-excel ripple-btn" onclick="exportToExcelMultiSheet()">
+                        <span><i class="fas fa-file-excel"></i> DOWNLOAD EXCEL</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="workspace-content">
+                <!-- STATISTIK RINGKAS -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon stat-blue"><i class="fas fa-building"></i></div>
+                        <div class="stat-info">
+                            <span>Total Unit SPPG</span>
+                            <strong id="stat-total-sppg">0</strong>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stat-cyan"><i class="fas fa-users"></i></div>
+                        <div class="stat-info">
+                            <span>Total Pegawai</span>
+                            <strong id="stat-total-pegawai">0</strong>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stat-green"><i class="fas fa-school"></i></div>
+                        <div class="stat-info">
+                            <span>Total Penerima Manfaat</span>
+                            <strong id="stat-total-penerima">0</strong>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stat-amber"><i class="fas fa-map-marked-alt"></i></div>
+                        <div class="stat-info">
+                            <span>Kecamatan Terdata</span>
+                            <strong id="stat-total-kecamatan">0 / 30</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TOOLBAR MODE TAMPILAN -->
+                <div class="workspace-toolbar">
+                    <div class="toolbar-tabs">
+                        <button type="button" class="tab-badge-btn active" id="view-card-btn" onclick="switchViewMode('card')">
+                            <i class="fas fa-th-large"></i> Tampilan Kartu (<span id="count-badge-text">0</span>)
+                        </button>
+                        <button type="button" class="tab-badge-btn" id="view-table-btn" onclick="switchViewMode('table')">
+                            <i class="fas fa-table"></i> Tampilan Tabel Rekap
+                        </button>
+                    </div>
+                    <span style="font-size: 12px; color: #1e3a8a; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-database" style="color: #10b981;"></i> Terhubung Real-Time ke Server Supabase
+                    </span>
+                </div>
+
+                <!-- DATA CONTAINER -->
+                <div id="admin-data-container">
+                    <div class="empty-state">
+                        <div class="empty-icon"><i class="fas fa-spinner fa-spin"></i></div>
+                        <h3>Memuat Data dari Server...</h3>
+                        <p>Mohon tunggu sebentar, sedang mengambil data SPPG & KMP Kota Bandung.</p>
+                    </div>
+                </div>
+            </div>
+
+            <button class="floating-contact-btn ripple-btn" onclick="openContactModal()">
+                <span><i class="fas fa-headset"></i> Bantuan IT</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <!-- MODAL EDIT DATA SPPG -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-box" style="width: 480px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Edit Data SPPG</h3>
+                <button class="close-modal" onclick="closeEditModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="edit-sppg-form" onsubmit="saveEditedRecord(event)" style="display:flex; flex-direction:column; gap:10px;">
+                <input type="hidden" id="edit-id">
+                <div class="input-group">
+                    <label class="form-label">Nama SPPG</label>
+                    <input type="text" id="edit-sppg" class="custom-input" required>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div class="input-group">
+                        <label class="form-label">Kecamatan</label>
+                        <select id="edit-kecamatan" class="custom-select" onchange="updateEditKelurahan()" required></select>
+                    </div>
+                    <div class="input-group">
+                        <label class="form-label">Kelurahan</label>
+                        <select id="edit-kelurahan" class="custom-select" required></select>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label class="form-label">Alamat Lengkap</label>
+                    <textarea id="edit-alamat" class="custom-textarea" rows="2" required></textarea>
+                </div>
+                <div class="input-group">
+                    <label class="form-label">Kepala SPPG</label>
+                    <input type="text" id="edit-kepala" class="custom-input" required>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div class="input-group">
+                        <label class="form-label">Jumlah Pegawai</label>
+                        <input type="number" id="edit-pegawai" class="custom-input" min="0" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="form-label">Penerima Manfaat / Sekolah</label>
+                        <input type="number" id="edit-penerima" class="custom-input" min="0" required>
+                    </div>
+                </div>
+                <div class="confirm-actions">
+                    <button type="button" class="btn-cancel-confirm" onclick="closeEditModal()">Batal</button>
+                    <button type="submit" class="btn-yes-confirm" id="btn-save-edit">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL PRATINJAU & DOWNLOAD LANGSUNG PDF -->
+    <div id="pdfPreviewModal" class="modal-overlay">
+        <div class="modal-box pdf-modal-box">
+            <div class="modal-header">
+                <h3 id="pdf-modal-title"><i class="fas fa-file-pdf" style="color: #ef4444;"></i> Pratinjau Evident PDF</h3>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" id="pdf-direct-download-btn" class="action-btn" style="background:#10b981; color:#ffffff; padding:7px 14px;">
+                        <i class="fas fa-download"></i> Download PDF
+                    </button>
+                    <a id="pdf-open-newtab" href="#" target="_blank" rel="noopener noreferrer" class="action-btn" style="background:#eff6ff; color:var(--accent-deep); border:1px solid #bfdbfe; text-decoration: none; padding:7px 14px;">
+                        <i class="fas fa-external-link-alt"></i> Buka Tab Baru
+                    </a>
+                    <button class="close-modal" onclick="closePdfModal()"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div class="pdf-frame-container">
+                <iframe id="pdf-preview-iframe" title="Pratinjau Dokumen PDF"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL KONFIRMASI -->
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-box" style="width: 370px; text-align: center; padding: 26px 22px;">
+            <div style="font-size: 40px; color: var(--danger); margin-bottom: 10px;" id="confirm-icon">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 17px; color: var(--accent-deep); margin-bottom: 8px;" id="confirm-title">Konfirmasi</h3>
+            <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.5;" id="confirm-message">Apakah Anda yakin?</p>
+            <div class="confirm-actions">
+                <button class="btn-cancel-confirm" onclick="closeConfirmModal()">Batal</button>
+                <button class="btn-yes-danger" id="confirm-yes-btn">Ya, Hapus Permanen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL BANTUAN -->
+    <div id="contactModal" class="modal-overlay">
+        <div class="modal-box" style="width: 380px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-life-ring"></i> Pusat Bantuan Admin</h3>
+                <button class="close-modal" onclick="closeContactModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <p style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5;">
+                Kendala teknis sinkronisasi database atau akun admin? Hubungi tim IT Bagtapem:
+            </p>
+            <a href="https://wa.me/6287825666617" target="_blank" rel="noopener noreferrer" style="display:flex; align-items:center; gap:12px; padding:12px; background:#f0f7ff; border:1px solid #dbeafe; border-radius:10px; text-decoration:none; color:var(--text-primary);">
+                <div style="width:40px; height:40px; border-radius:10px; background:#16a34a; color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px;"><i class="fab fa-whatsapp"></i></div>
+                <div>
+                    <h4 style="font-size:13px; color:var(--accent-deep);">Febri (WhatsApp Support)</h4>
+                    <p style="font-size:12px; color:var(--text-secondary);">+62 878-2566-6617</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Konfigurasi Supabase Project: tapemSPPG (Sama persis dengan web input)
+        const SUPABASE_URL = 'https://xkshwsrdaokpynuijqla.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_UzSES_7G-g6RFuwGSva2cA_T95qe74Y';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const wilayahBandung = {
+            "Andir": ["Campaka", "Ciroyom", "Dunguscariang", "Garuda", "Kebon Jeruk", "Maleber"],
+            "Antapani": ["Antapani Kidul", "Antapani Kulon", "Antapani Tengah", "Antapani Wetan"],
+            "Arcamanik": ["Cisaranten Bina Harapan", "Cisaranten Endah", "Cisaranten Kulon", "Sukamiskin"],
+            "Astanaanyar": ["Cibadak", "Karanganyar", "Karasak", "Nyengseret", "Panjunan", "Pelindunghewan"],
+            "Babakan Ciparay": ["Babakan", "Babakan Ciparay", "Cirangrang", "Margahayu Utara", "Margasuka", "Sukahaji"],
+            "Bandung Kidul": ["Batununggal", "Kujangsari", "Mengger", "Wates"],
+            "Bandung Kulon": ["Caringin", "Cibuntu", "Cigondewah Kaler", "Cigondewah Kidul", "Cigondewah Rahayu", "Cijerah", "Gempolsari", "Warungmuncang"],
+            "Bandung Wetan": ["Cihapit", "Citarum", "Tamansari"],
+            "Batununggal": ["Binong", "Cibangkong", "Gumuruh", "Kacapiring", "Kebongedang", "Kebonwaru", "Maleer", "Samoja"],
+            "Bojongloa Kaler": ["Babakan Asih", "Babakan Tarogong", "Jamika", "Kopo", "Suka Asih"],
+            "Bojongloa Kidul": ["Cibaduyut", "Cibaduyut Kidul", "Cibaduyut Wetan", "Kebon Lega", "Mekarwangi", "Situsaeur"],
+            "Buahbatu": ["Cijawura", "Jatisari", "Margasari", "Sekejati"],
+            "Cibeunying Kaler": ["Cigadung", "Cihaurgeulis", "Neglasari", "Sukaluyu"],
+            "Cibeunying Kidul": ["Cicadas", "Cikutra", "Padasuka", "Pasirlayung", "Sukamaju", "Sukapada"],
+            "Cibiru": ["Cipadung", "Cisurupan", "Palasari", "Pasirbiru"],
+            "Cicendo": ["Arjuna", "Husen Sastranegara", "Pajajaran", "Pamoyanan", "Pasirkaliki", "Sukaraja"],
+            "Cidadap": ["Ciumbuleuit", "Hegarmanah", "Ledeng"],
+            "Cinambo": ["Babakan Penghulu", "Cisaranten Wetan", "Pakemitan", "Sukamulya"],
+            "Coblong": ["Cipaganti", "Dago", "Lebakgede", "Lebaksiliwangi", "Sadangserang", "Sekeloa"],
+            "Gedebage": ["Cimincrang", "Cisaranten Kidul", "Rancabolang", "Rancanumpang"],
+            "Kiaracondong": ["Babakansari", "Babakansurabaya", "Cicaheum", "Kebon Jayanti", "Kebon Kangkung", "Sukapura"],
+            "Lengkong": ["Burangrang", "Cijagra", "Cikawao", "Lingkar Selatan", "Malabar", "Paledang", "Turangga"],
+            "Mandalajati": ["Jatihandap", "Karangpamulang", "Pasir Impun", "Sindangjaya"],
+            "Panyileukan": ["Cipadung Kidul", "Cipadung Kulon", "Cipadung Wetan", "Mekarmulya"],
+            "Rancasari": ["Cipamokolan", "Derwati", "Manjahlega", "Mekarjaya"],
+            "Regol": ["Ancol", "Balonggede", "Ciateul", "Cigereleng", "Ciseureuh", "Pasirluyu", "Pungkur"],
+            "Sukajadi": ["Cipedes", "Pasteur", "Sukabungah", "Sukagalih", "Sukawarna"],
+            "Sukasari": ["Gegerkalong", "Isola", "Sarijadi", "Sukarasa"],
+            "Sumur Bandung": ["Babakan Ciamis", "Braga", "Kebon Pisang", "Merdeka"],
+            "Ujungberung": ["Cigending", "Pasanggrahan", "Pasir Endah", "Pasir Jati", "Pasir Wangi"]
+        };
+
+        let allRecords = [];
+        let filteredRecords = [];
+        let currentViewMode = 'card';
+        let authMode = 'login';
+        let searchDebounceTimer = null;
+
+        function escapeHTML(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `custom-toast ${type}`;
+            let iconClass = type === 'error' ? 'fa-times-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-check-circle';
+            let iconColor = type === 'error' ? '#ef4444' : type === 'warning' ? '#d97706' : '#10b981';
+            toast.innerHTML = `<i class="fas ${iconClass}" style="color:${iconColor}; font-size:17px;"></i><div class="toast-text">${escapeHTML(message)}</div>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        // ==========================================
+        // AUTENTIKASI & LUPA PASSWORD MASTER ADMIN
+        // ==========================================
+        function switchAuthTab(mode) {
+            authMode = mode;
+            document.getElementById('new-password-form').style.display = 'none';
+            document.getElementById('admin-auth-form').style.display = 'flex';
+            document.getElementById('auth-tab-login').classList.toggle('active', mode === 'login');
+            document.getElementById('auth-tab-signup').classList.toggle('active', mode === 'signup');
+            const btn = document.getElementById('btn-auth-submit');
+            btn.innerHTML = mode === 'login'
+                ? '<span><i class="fas fa-lock-open"></i> Masuk ke Dashboard Admin</span>'
+                : '<span><i class="fas fa-user-plus"></i> Daftarkan Akun Admin</span>';
+        }
+
+        async function handleAdminAuth(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value.trim().toLowerCase();
+            const password = document.getElementById('auth-password').value;
+            const btn = document.getElementById('btn-auth-submit');
+
+            if (!email.startsWith('admin@')) {
+                showToast("Akses ditolak! Email Master Admin wajib diawali dengan 'admin@'.", "error");
+                return;
+            }
+
+            btn.disabled = true;
+            try {
+                if (authMode === 'signup') {
+                    const { data, error } = await supabaseClient.auth.signUp({ email, password });
+                    if (error) throw error;
+                    showToast("Akun admin berhasil didaftarkan! Silakan masuk.", "success");
+                    if (data.session) {
+                        enterAdminDashboard(data.user);
+                    } else {
+                        switchAuthTab('login');
+                    }
+                } else {
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                    enterAdminDashboard(data.user);
+                    showToast("Selamat datang di Dashboard Master Admin!", "success");
+                }
+            } catch (err) {
+                showToast(err.message || "Gagal melakukan autentikasi admin.", "error");
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function kirimLinkResetPassword() {
+            const email = document.getElementById('auth-email').value.trim().toLowerCase();
+            if (!email || !email.startsWith('admin@')) {
+                showToast("Ketik email admin (awalan admin@) terlebih dahulu di kolom email!", "warning");
+                document.getElementById('auth-email').focus();
+                return;
+            }
+            try {
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin + window.location.pathname
+                });
+                if (error) throw error;
+                showToast(`Link reset password otomatis dikirim Supabase ke ${email}. Cek inbox/spam email Anda.`, "success");
+            } catch (err) {
+                showToast("Gagal mengirim link reset: " + err.message, "error");
+            }
+        }
+
+        async function simpanPasswordBaru(e) {
+            e.preventDefault();
+            const newPassword = document.getElementById('new-admin-password').value;
+            const btn = document.getElementById('btn-save-new-pass');
+            btn.disabled = true;
+            try {
+                const { data, error } = await supabaseClient.auth.updateUser({ password: newPassword });
+                if (error) throw error;
+
+                document.getElementById('new-password-form').style.display = 'none';
+                document.getElementById('admin-auth-form').style.display = 'flex';
+                document.getElementById('login-tabs-wrap').style.display = 'flex';
+                document.getElementById('new-admin-password').value = '';
+                history.replaceState(null, '', window.location.pathname);
+
+                showToast("Kata sandi baru berhasil disimpan!", "success");
+                if (data && data.user) {
+                    enterAdminDashboard(data.user);
+                }
+            } catch (err) {
+                showToast("Gagal menyimpan kata sandi baru: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function showRecoveryFormUI() {
+            document.getElementById('login-gate').classList.remove('hidden');
+            document.getElementById('login-tabs-wrap').style.display = 'none';
+            document.getElementById('admin-auth-form').style.display = 'none';
+            document.getElementById('new-password-form').style.display = 'flex';
+        }
+
+        supabaseClient.auth.onAuthStateChange((event) => {
+            if (event === 'PASSWORD_RECOVERY') {
+                showRecoveryFormUI();
+                showToast("Silakan masukkan kata sandi baru untuk akun admin Anda.", "warning");
+            }
+        });
+
+        function enterAdminDashboard(user) {
+            document.getElementById('login-gate').classList.add('hidden');
+            document.getElementById('admin-email-display').textContent = user?.email || 'admin@bagtapem';
+            fetchAllSupabaseData(false);
+        }
+
+        async function logoutAdmin() {
+            await supabaseClient.auth.signOut();
+            document.getElementById('login-tabs-wrap').style.display = 'flex';
+            document.getElementById('new-password-form').style.display = 'none';
+            document.getElementById('admin-auth-form').style.display = 'flex';
+            document.getElementById('login-gate').classList.remove('hidden');
+            showToast("Anda telah keluar dari akun Admin.", "warning");
+        }
+
+        // ==========================================
+        // INISIALISASI DROPDOWN WILAYAH
+        // ==========================================
+        function initWilayahDropdowns() {
+            const filterKec = document.getElementById('filter-kecamatan');
+            const editKec = document.getElementById('edit-kecamatan');
+            Object.keys(wilayahBandung).sort().forEach(kec => {
+                const opt1 = document.createElement('option');
+                opt1.value = kec; opt1.textContent = kec;
+                filterKec.appendChild(opt1);
+
+                const opt2 = document.createElement('option');
+                opt2.value = kec; opt2.textContent = kec;
+                editKec.appendChild(opt2);
+            });
+        }
+
+        function onFilterKecamatanChange() {
+            const selectedKec = document.getElementById('filter-kecamatan').value;
+            const kelSelect = document.getElementById('filter-kelurahan');
+            kelSelect.innerHTML = '<option value="">-- Semua Kelurahan --</option>';
+            if (selectedKec && wilayahBandung[selectedKec]) {
+                wilayahBandung[selectedKec].forEach(kel => {
+                    const opt = document.createElement('option');
+                    opt.value = kel; opt.textContent = kel;
+                    kelSelect.appendChild(opt);
+                });
+            }
+            applyFilters();
+        }
+
+        function updateEditKelurahan() {
+            const selectedKec = document.getElementById('edit-kecamatan').value;
+            const kelSelect = document.getElementById('edit-kelurahan');
+            kelSelect.innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+            if (selectedKec && wilayahBandung[selectedKec]) {
+                wilayahBandung[selectedKec].forEach(kel => {
+                    const opt = document.createElement('option');
+                    opt.value = kel; opt.textContent = kel;
+                    kelSelect.appendChild(opt);
+                });
+            }
+        }
+
+        // ==========================================
+        // AMBIL DATA SUPABASE (ANTI-LAG)
+        // ==========================================
+        async function fetchAllSupabaseData(showNotif = false) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('data_sppg')
+                    .select('*')
+                    .order('id', { ascending: false });
+
+                if (error) throw error;
+                allRecords = Array.isArray(data) ? data : [];
+                applyFilters();
+                if (showNotif) showToast(`Sinkronisasi berhasil (${allRecords.length} data SPPG dimuat).`, "success");
+            } catch (err) {
+                console.error("Fetch error:", err);
+                showToast("Gagal memuat data dari Supabase: " + err.message, "error");
+            }
+        }
+
+        function debouncedFilter() {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(applyFilters, 180);
+        }
+
+        function applyFilters() {
+            const keyword = document.getElementById('filter-search').value.trim().toLowerCase();
+            const kec = document.getElementById('filter-kecamatan').value;
+            const kel = document.getElementById('filter-kelurahan').value;
+            const sortBy = document.getElementById('filter-sort').value;
+
+            let result = allRecords.filter(item => {
+                if (kec && item.kecamatan !== kec) return false;
+                if (kel && item.kelurahan !== kel) return false;
+                if (keyword) {
+                    const hay = `${item.nama_sppg || ''} ${item.kepala_sppg || ''} ${item.alamat || ''} ${item.kecamatan || ''} ${item.kelurahan || ''}`.toLowerCase();
+                    if (!hay.includes(keyword)) return false;
+                }
+                return true;
+            });
+
+            result.sort((a, b) => {
+                if (sortBy === 'oldest') return (a.id || 0) - (b.id || 0);
+                if (sortBy === 'sppg_asc') return (a.nama_sppg || '').localeCompare(b.nama_sppg || '');
+                if (sortBy === 'kec_asc') return (a.kecamatan || '').localeCompare(b.kecamatan || '');
+                if (sortBy === 'penerima_desc') return (Number(b.jumlah_penerima) || 0) - (Number(a.jumlah_penerima) || 0);
+                return (b.id || 0) - (a.id || 0);
+            });
+
+            filteredRecords = result;
+            updateStatistics();
+            renderAdminData();
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-search').value = '';
+            document.getElementById('filter-kecamatan').value = '';
+            document.getElementById('filter-kelurahan').innerHTML = '<option value="">-- Semua Kelurahan --</option>';
+            document.getElementById('filter-sort').value = 'newest';
+            applyFilters();
+            showToast("Filter pencarian telah direset.", "success");
+        }
+
+        function updateStatistics() {
+            const totalSppg = filteredRecords.length;
+            let totalPegawai = 0;
+            let totalPenerima = 0;
+            const uniqueKec = new Set();
+
+            filteredRecords.forEach(item => {
+                totalPegawai += Number(item.jumlah_pegawai) || 0;
+                totalPenerima += Number(item.jumlah_penerima) || 0;
+                if (item.kecamatan) uniqueKec.add(item.kecamatan);
+            });
+
+            document.getElementById('stat-total-sppg').textContent = totalSppg.toLocaleString('id-ID');
+            document.getElementById('stat-total-pegawai').textContent = totalPegawai.toLocaleString('id-ID');
+            document.getElementById('stat-total-penerima').textContent = totalPenerima.toLocaleString('id-ID');
+            document.getElementById('stat-total-kecamatan').textContent = `${uniqueKec.size} / 30`;
+            document.getElementById('count-badge-text').textContent = totalSppg;
+        }
+
+        function switchViewMode(mode) {
+            currentViewMode = mode;
+            document.getElementById('view-card-btn').classList.toggle('active', mode === 'card');
+            document.getElementById('view-table-btn').classList.toggle('active', mode === 'table');
+            renderAdminData();
+        }
+
+        function renderAdminData() {
+            const container = document.getElementById('admin-data-container');
+
+            if (filteredRecords.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon"><i class="fas fa-folder-open"></i></div>
+                        <h3>Tidak Ada Data Ditemukan</h3>
+                        <p>Belum ada data SPPG yang masuk atau tidak sesuai dengan filter pencarian Anda.</p>
+                    </div>`;
+                return;
+            }
+
+            if (currentViewMode === 'table') {
+                let rows = filteredRecords.map((item, idx) => `
+                    <tr>
+                        <td><strong>${idx + 1}</strong></td>
+                        <td><strong style="color:var(--accent-deep);">${escapeHTML(item.nama_sppg)}</strong></td>
+                        <td>${escapeHTML(item.kecamatan)}</td>
+                        <td>${escapeHTML(item.kelurahan)}</td>
+                        <td>${escapeHTML(item.alamat)}</td>
+                        <td>${escapeHTML(item.kepala_sppg)}</td>
+                        <td style="text-align:center;">${Number(item.jumlah_pegawai || 0).toLocaleString('id-ID')}</td>
+                        <td style="text-align:center;"><strong>${Number(item.jumlah_penerima || 0).toLocaleString('id-ID')}</strong></td>
+                        <td>
+                            ${item.evident_lokasi 
+                                ? `<button type="button" class="btn-mini-preview" onclick="openPdfModal('${escapeHTML(item.evident_lokasi)}', '${escapeHTML(item.nama_sppg)}')"><i class="fas fa-file-pdf"></i> PDF</button>` 
+                                : '-'}
+                        </td>
+                        <td style="white-space:nowrap;">
+                            <button type="button" class="action-btn action-edit" onclick="openEditModal(${item.id})"><i class="fas fa-edit"></i></button>
+                            <button type="button" class="action-btn action-delete" onclick="confirmDeleteRecord(${item.id})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+
+                container.innerHTML = `
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Nama SPPG</th>
+                                    <th>Kecamatan</th>
+                                    <th>Kelurahan</th>
+                                    <th>Alamat</th>
+                                    <th>Kepala SPPG</th>
+                                    <th>Pegawai</th>
+                                    <th>Penerima</th>
+                                    <th>Evident</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>`;
+                return;
+            }
+
+            // CARD VIEW
+            const cardsHtml = filteredRecords.map(item => {
+                const fileNameLabel = item.evident_lokasi ? item.evident_lokasi.split('/').pop() : 'Tidak ada file';
+                return `
+                    <div class="data-card">
+                        <div class="card-decoration"></div>
+                        <div class="card-header">
+                            <div class="card-header-left">
+                                <div class="card-icon"><i class="fas fa-building"></i></div>
+                                <div class="card-title">${escapeHTML(item.nama_sppg)}</div>
+                            </div>
+                            <span class="status-pill-verified"><i class="fas fa-check"></i> Terdata</span>
+                        </div>
+                        <div class="data-list">
+                            <div class="data-item"><span class="data-label">Kecamatan / Kelurahan</span><span class="data-value">${escapeHTML(item.kecamatan)} / ${escapeHTML(item.kelurahan)}</span></div>
+                            <div class="data-item"><span class="data-label">Alamat</span><span class="data-value">${escapeHTML(item.alamat)}</span></div>
+                            <div class="data-item"><span class="data-label">Kepala SPPG</span><span class="data-value">${escapeHTML(item.kepala_sppg)}</span></div>
+                            <div class="data-item"><span class="data-label">Jumlah Pegawai</span><span class="data-value">${Number(item.jumlah_pegawai || 0).toLocaleString('id-ID')} Orang</span></div>
+                            <div class="data-item"><span class="data-label">Penerima Manfaat / Sekolah</span><span class="data-value">${Number(item.jumlah_penerima || 0).toLocaleString('id-ID')} Target</span></div>
+                            <div class="data-item">
+                                <span class="data-label">Evident Lokasi</span>
+                                <div class="data-value file-row">
+                                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                        <i class="fas fa-file-pdf" style="color:#ef4444; margin-right:4px;"></i> ${escapeHTML(fileNameLabel)}
+                                    </span>
+                                    ${item.evident_lokasi ? `<button type="button" class="btn-mini-preview" onclick="openPdfModal('${escapeHTML(item.evident_lokasi)}', '${escapeHTML(item.nama_sppg)}')"><i class="fas fa-eye"></i> Lihat PDF</button>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <button type="button" class="action-btn action-edit" onclick="openEditModal(${item.id})"><i class="fas fa-edit"></i> Edit</button>
+                            <button type="button" class="action-btn action-delete" onclick="confirmDeleteRecord(${item.id})"><i class="fas fa-trash"></i> Hapus</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `<div class="preview-grid">${cardsHtml}</div>`;
+        }
+
+        // ==========================================
+        // EDIT & HAPUS PERMANEN (DB + STORAGE BUCKET)
+        // ==========================================
+        function openEditModal(id) {
+            const item = allRecords.find(r => r.id === id);
+            if (!item) return;
+
+            document.getElementById('edit-id').value = item.id;
+            document.getElementById('edit-sppg').value = item.nama_sppg || '';
+            document.getElementById('edit-kecamatan').value = item.kecamatan || '';
+            updateEditKelurahan();
+            document.getElementById('edit-kelurahan').value = item.kelurahan || '';
+            document.getElementById('edit-alamat').value = item.alamat || '';
+            document.getElementById('edit-kepala').value = item.kepala_sppg || '';
+            document.getElementById('edit-pegawai').value = item.jumlah_pegawai ?? 0;
+            document.getElementById('edit-penerima').value = item.jumlah_penerima ?? 0;
+
+            document.getElementById('editModal').classList.add('show');
+        }
+
+        function closeEditModal() { document.getElementById('editModal').classList.remove('show'); }
+
+        async function saveEditedRecord(e) {
+            e.preventDefault();
+            const id = Number(document.getElementById('edit-id').value);
+            const payload = {
+                nama_sppg: document.getElementById('edit-sppg').value.trim(),
+                kecamatan: document.getElementById('edit-kecamatan').value,
+                kelurahan: document.getElementById('edit-kelurahan').value,
+                alamat: document.getElementById('edit-alamat').value.trim(),
+                kepala_sppg: document.getElementById('edit-kepala').value.trim(),
+                jumlah_pegawai: parseInt(document.getElementById('edit-pegawai').value, 10) || 0,
+                jumlah_penerima: parseInt(document.getElementById('edit-penerima').value, 10) || 0
+            };
+
+            const btn = document.getElementById('btn-save-edit');
+            btn.disabled = true;
+            try {
+                const { error } = await supabaseClient
+                    .from('data_sppg')
+                    .update(payload)
+                    .eq('id', id);
+
+                if (error) throw error;
+                closeEditModal();
+                showToast(`Data "${payload.nama_sppg}" berhasil diperbarui!`, "success");
+                await fetchAllSupabaseData(false);
+            } catch (err) {
+                showToast("Gagal memperbarui data: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        let pendingDeleteId = null;
+        function confirmDeleteRecord(id) {
+            const item = allRecords.find(r => r.id === id);
+            if (!item) return;
+            pendingDeleteId = id;
+            document.getElementById('confirm-title').textContent = "Hapus Data Permanen";
+            document.getElementById('confirm-message').textContent = `Yakin menghapus "${item.nama_sppg}" beserta file PDF evident-nya secara permanen dari server?`;
+            document.getElementById('confirmModal').classList.add('show');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.remove('show');
+            pendingDeleteId = null;
+        }
+
+        document.getElementById('confirm-yes-btn').addEventListener('click', async () => {
+            if (!pendingDeleteId) return;
+            const id = pendingDeleteId;
+            const item = allRecords.find(r => r.id === id);
+            closeConfirmModal();
+
+            try {
+                // 1. Hapus file dari bucket evident_sppg jika ada
+                if (item && item.evident_lokasi) {
+                    const urlParts = item.evident_lokasi.split('/evident_sppg/');
+                    if (urlParts.length > 1) {
+                        const filePath = decodeURIComponent(urlParts[1].split('?')[0]);
+                        await supabaseClient.storage.from('evident_sppg').remove([filePath]);
+                    }
+                }
+
+                // 2. Hapus baris dari tabel data_sppg
+                const { error } = await supabaseClient
+                    .from('data_sppg')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+                showToast("Data dan file PDF berhasil dihapus permanen.", "success");
+                await fetchAllSupabaseData(false);
+            } catch (err) {
+                showToast("Gagal menghapus data: " + err.message, "error");
+            }
+        });
+
+        // ==========================================
+        // PRATINJAU & DIRECT DOWNLOAD PDF
+        // ==========================================
+        function openPdfModal(url, sppgName) {
+            const modal = document.getElementById('pdfPreviewModal');
+            document.getElementById('pdf-modal-title').innerHTML = `<i class="fas fa-file-pdf" style="color:#ef4444;"></i> Evident: ${escapeHTML(sppgName)}`;
+            document.getElementById('pdf-preview-iframe').src = url;
+            document.getElementById('pdf-open-newtab').href = url;
+
+            const dlBtn = document.getElementById('pdf-direct-download-btn');
+            dlBtn.onclick = () => downloadDirectPdf(url, `Evident_${sppgName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
+            modal.classList.add('show');
+        }
+
+        async function downloadDirectPdf(url, filename) {
+            try {
+                showToast("Mengunduh dokumen PDF...", "warning");
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+                showToast("Dokumen PDF berhasil diunduh!", "success");
+            } catch (err) {
+                window.open(url, '_blank');
+            }
+        }
+
+        function closePdfModal() {
+            document.getElementById('pdfPreviewModal').classList.remove('show');
+            document.getElementById('pdf-preview-iframe').src = 'about:blank';
+        }
+
+        // ==========================================
+        // EXPORT EXCEL MULTI-SHEET (.XLSX)
+        // ==========================================
+        function exportToExcelMultiSheet() {
+            if (filteredRecords.length === 0) {
+                showToast("Tidak ada data untuk diexport ke Excel.", "warning");
+                return;
+            }
+
+            // Sheet 1: Rekapitulasi Per Kecamatan
+            const rekapMap = {};
+            Object.keys(wilayahBandung).sort().forEach(kec => {
+                rekapMap[kec] = { Kecamatan: kec, "Jumlah Unit SPPG": 0, "Total Pegawai": 0, "Total Penerima Manfaat": 0 };
+            });
+
+            filteredRecords.forEach(item => {
+                const k = item.kecamatan || 'Lainnya';
+                if (!rekapMap[k]) rekapMap[k] = { Kecamatan: k, "Jumlah Unit SPPG": 0, "Total Pegawai": 0, "Total Penerima Manfaat": 0 };
+                rekapMap[k]["Jumlah Unit SPPG"] += 1;
+                rekapMap[k]["Total Pegawai"] += Number(item.jumlah_pegawai) || 0;
+                rekapMap[k]["Total Penerima Manfaat"] += Number(item.jumlah_penerima) || 0;
+            });
+
+            const sheet1Data = Object.values(rekapMap);
+
+            // Sheet 2: Detail Seluruh Data SPPG
+            const sheet2Data = filteredRecords.map((item, idx) => ({
+                "No": idx + 1,
+                "Nama SPPG": item.nama_sppg || '-',
+                "Kecamatan": item.kecamatan || '-',
+                "Kelurahan": item.kelurahan || '-',
+                "Alamat Lengkap": item.alamat || '-',
+                "Kepala SPPG": item.kepala_sppg || '-',
+                "Jumlah Pegawai": Number(item.jumlah_pegawai) || 0,
+                "Penerima Manfaat / Sekolah": Number(item.jumlah_penerima) || 0,
+                "Link Evident PDF": item.evident_lokasi || '-'
+            }));
+
+            const wb = XLSX.utils.book_new();
+            const ws1 = XLSX.utils.json_to_sheet(sheet1Data);
+            const ws2 = XLSX.utils.json_to_sheet(sheet2Data);
+
+            ws1['!cols'] = [{ wch: 24 }, { wch: 20 }, { wch: 18 }, { wch: 24 }];
+            ws2['!cols'] = [{ wch: 5 }, { wch: 28 }, { wch: 18 }, { wch: 20 }, { wch: 35 }, { wch: 25 }, { wch: 16 }, { wch: 24 }, { wch: 45 }];
+
+            XLSX.utils.book_append_sheet(wb, ws1, "Rekap Per Kecamatan");
+            XLSX.utils.book_append_sheet(wb, ws2, "Detail Data SPPG");
+
+            const dateStr = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(wb, `Rekapitulasi_SPPG_KMP_Bandung_${dateStr}.xlsx`);
+            showToast("File Excel multi-sheet berhasil diunduh!", "success");
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('mobile-overlay').classList.toggle('show');
+        }
+        function openContactModal() { document.getElementById('contactModal').classList.add('show'); }
+        function closeContactModal() { document.getElementById('contactModal').classList.remove('show'); }
+
+        // Cek Sesi Login Admin Otomatis Saat Dibuka (Dengan proteksi mode Recovery Password)
+        document.addEventListener('DOMContentLoaded', async () => {
+            initWilayahDropdowns();
+            const isRecoveryMode = window.location.hash.includes('type=recovery');
+            if (isRecoveryMode) {
+                showRecoveryFormUI();
+                return;
+            }
+            const { data } = await supabaseClient.auth.getSession();
+            if (data && data.session && data.session.user && data.session.user.email?.startsWith('admin@')) {
+                enterAdminDashboard(data.session.user);
+            }
+        });
+    </script>
+</body>
+</html>
