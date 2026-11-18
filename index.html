@@ -612,8 +612,8 @@
             <!-- FORM LOGIN / DAFTAR ADMIN -->
             <form id="admin-auth-form" onsubmit="handleAdminAuth(event)" style="display:flex; flex-direction:column; gap:12px;">
                 <div class="input-group">
-                    <label class="form-label">Email Admin (Wajib awalan admin@)</label>
-                    <input type="email" id="auth-email" class="custom-input" placeholder="admin@bagtapem.bandung.go.id" required>
+                    <label class="form-label">Email Admin Aktif</label>
+                    <input type="email" id="auth-email" class="custom-input" placeholder="contoh@gmail.com" required>
                 </div>
                 <div class="input-group">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -992,8 +992,8 @@
             const password = document.getElementById('auth-password').value;
             const btn = document.getElementById('btn-auth-submit');
 
-            if (!email.startsWith('admin@')) {
-                showToast("Akses ditolak! Email Master Admin wajib diawali dengan 'admin@'.", "error");
+            if (!email || !email.includes('@')) {
+                showToast("Masukkan alamat email aktif yang valid!", "error");
                 return;
             }
 
@@ -1023,8 +1023,8 @@
 
         async function kirimLinkResetPassword() {
             const email = document.getElementById('auth-email').value.trim().toLowerCase();
-            if (!email || !email.startsWith('admin@')) {
-                showToast("Ketik email admin (awalan admin@) terlebih dahulu di kolom email!", "warning");
+            if (!email || !email.includes('@')) {
+                showToast("Ketik email admin aktif Anda terlebih dahulu di kolom email!", "warning");
                 document.getElementById('auth-email').focus();
                 return;
             }
@@ -1081,7 +1081,7 @@
 
         function enterAdminDashboard(user) {
             document.getElementById('login-gate').classList.add('hidden');
-            document.getElementById('admin-email-display').textContent = user?.email || 'admin@bagtapem';
+            document.getElementById('admin-email-display').textContent = user?.email || 'Admin Aktif';
             fetchAllSupabaseData(false);
         }
 
@@ -1532,7 +1532,7 @@
                 return;
             }
             const { data } = await supabaseClient.auth.getSession();
-            if (data && data.session && data.session.user && data.session.user.email?.startsWith('admin@')) {
+            if (data && data.session && data.session.user) {
                 enterAdminDashboard(data.session.user);
             }
         });
