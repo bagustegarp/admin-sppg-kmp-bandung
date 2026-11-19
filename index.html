@@ -554,6 +554,7 @@
         .stat-amber { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
         .stat-info span { display: block; font-size: 11px; font-weight: 700; color: var(--text-secondary); }
         .stat-info strong { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 800; color: var(--accent-deep); }
+        .stat-sub-breakdown { display: block; font-size: 10px; font-weight: 700; color: #0284c7; margin-top: 2px; }
 
         /* TOOLBAR */
         .workspace-toolbar { 
@@ -598,11 +599,16 @@
         }
         .data-card:hover { transform: translateY(-3px); border-color: #60a5fa; }
         .card-decoration { position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #0ea5e9 100%); }
+        .card-decoration.kmp-bar { background: linear-gradient(90deg, #065f46 0%, #059669 50%, #10b981 100%); }
         .card-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
         .card-header-left { display: flex; align-items: center; gap: 11px; min-width: 0; }
         .card-icon { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); color: var(--accent); border: 1px solid #bfdbfe; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+        .card-icon.kmp-icon { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); color: #059669; border-color: #a7f3d0; }
         .card-title { font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; color: var(--accent-deep); line-height: 1.3; word-break: break-word; }
         .status-pill-verified { background: #dcfce7; color: #166534; border: 1px solid #86efac; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+        .kat-pill { font-size: 10px; font-weight: 800; padding: 3px 9px; border-radius: 20px; letter-spacing: 0.4px; white-space: nowrap; }
+        .kat-pill.sppg { background: #dbeafe; color: #1e3a8a; border: 1px solid #93c5fd; }
+        .kat-pill.kmp { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
 
         .data-list { display: flex; flex-direction: column; gap: 8px; }
         .data-item { display: flex; flex-direction: column; gap: 2px; }
@@ -817,7 +823,16 @@
                 </div>
 
                 <div class="input-group">
-                    <label class="form-label">Cari Nama SPPG / Kepala / Alamat</label>
+                    <label class="form-label">Filter Kategori</label>
+                    <select id="filter-kategori" class="custom-select" onchange="applyFilters()">
+                        <option value="">-- Semua Kategori (SPPG & KMP) --</option>
+                        <option value="SPPG">SPPG</option>
+                        <option value="KMP">KMP</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label class="form-label">Cari Nama / Pimpinan / Alamat</label>
                     <input type="text" id="filter-search" class="custom-input" placeholder="Ketik kata kunci pencarian..." oninput="debouncedFilter()">
                 </div>
 
@@ -840,7 +855,7 @@
                     <select id="filter-sort" class="custom-select" onchange="applyFilters()">
                         <option value="newest">Terbaru Masuk</option>
                         <option value="oldest">Terlama Masuk</option>
-                        <option value="sppg_asc">Nama SPPG (A - Z)</option>
+                        <option value="sppg_asc">Nama Unit (A - Z)</option>
                         <option value="kec_asc">Kecamatan (A - Z)</option>
                         <option value="penerima_desc">Penerima Manfaat Terbanyak</option>
                     </select>
@@ -887,14 +902,15 @@
                     <div class="stat-card">
                         <div class="stat-icon stat-blue"><i class="fas fa-building"></i></div>
                         <div class="stat-info">
-                            <span>Total Unit SPPG</span>
+                            <span>Total Unit Terdata</span>
                             <strong id="stat-total-sppg">0</strong>
+                            <small class="stat-sub-breakdown" id="stat-breakdown-unit">SPPG: 0 &bull; KMP: 0</small>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon stat-cyan"><i class="fas fa-users"></i></div>
                         <div class="stat-info">
-                            <span>Total Pegawai</span>
+                            <span>Total Pegawai (SPPG)</span>
                             <strong id="stat-total-pegawai">0</strong>
                         </div>
                     </div>
@@ -947,17 +963,24 @@
 
     <div id="toast-container"></div>
 
-    <!-- MODAL EDIT DATA SPPG -->
+    <!-- MODAL EDIT DATA SPPG & KMP -->
     <div id="editModal" class="modal-overlay">
         <div class="modal-box" style="width: 480px;">
             <div class="modal-header">
-                <h3><i class="fas fa-edit"></i> Edit Data SPPG</h3>
+                <h3 id="edit-modal-heading"><i class="fas fa-edit"></i> Edit Data SPPG</h3>
                 <button class="close-modal" onclick="closeEditModal()"><i class="fas fa-times"></i></button>
             </div>
             <form id="edit-sppg-form" onsubmit="saveEditedRecord(event)" style="display:flex; flex-direction:column; gap:10px;">
                 <input type="hidden" id="edit-id">
                 <div class="input-group">
-                    <label class="form-label">Nama SPPG</label>
+                    <label class="form-label">Kategori</label>
+                    <select id="edit-kategori" class="custom-select" onchange="onEditKategoriChange()" required>
+                        <option value="SPPG">SPPG</option>
+                        <option value="KMP">KMP</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label class="form-label" id="edit-label-nama">Nama SPPG</label>
                     <input type="text" id="edit-sppg" class="custom-input" required>
                 </div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
@@ -975,17 +998,29 @@
                     <textarea id="edit-alamat" class="custom-textarea" rows="2" required></textarea>
                 </div>
                 <div class="input-group">
-                    <label class="form-label">Kepala SPPG</label>
+                    <label class="form-label" id="edit-label-kepala">Kepala SPPG</label>
                     <input type="text" id="edit-kepala" class="custom-input" required>
                 </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <!-- KHUSUS SPPG -->
+                <div id="edit-sppg-numbers-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     <div class="input-group">
                         <label class="form-label">Jumlah Pegawai</label>
-                        <input type="number" id="edit-pegawai" class="custom-input" min="0" required>
+                        <input type="number" id="edit-pegawai" class="custom-input" min="0">
                     </div>
                     <div class="input-group">
                         <label class="form-label">Penerima Manfaat / Sekolah</label>
-                        <input type="number" id="edit-penerima" class="custom-input" min="0" required>
+                        <input type="number" id="edit-penerima" class="custom-input" min="0">
+                    </div>
+                </div>
+                <!-- KHUSUS KMP -->
+                <div id="edit-kmp-pengurus-grid" style="display:none; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div class="input-group">
+                        <label class="form-label">Sekretaris</label>
+                        <input type="text" id="edit-sekretaris" class="custom-input">
+                    </div>
+                    <div class="input-group">
+                        <label class="form-label">Bendahara</label>
+                        <input type="text" id="edit-bendahara" class="custom-input">
                     </div>
                 </div>
                 <div class="confirm-actions">
@@ -1372,16 +1407,19 @@
         }
 
         function applyFilters() {
+            const katFilter = document.getElementById('filter-kategori').value;
             const keyword = document.getElementById('filter-search').value.trim().toLowerCase();
             const kec = document.getElementById('filter-kecamatan').value;
             const kel = document.getElementById('filter-kelurahan').value;
             const sortBy = document.getElementById('filter-sort').value;
 
             let result = allRecords.filter(item => {
+                const itemKat = (item.kategori || 'SPPG').toUpperCase();
+                if (katFilter && itemKat !== katFilter) return false;
                 if (kec && item.kecamatan !== kec) return false;
                 if (kel && item.kelurahan !== kel) return false;
                 if (keyword) {
-                    const hay = `${item.nama_sppg || ''} ${item.kepala_sppg || ''} ${item.alamat || ''} ${item.kecamatan || ''} ${item.kelurahan || ''}`.toLowerCase();
+                    const hay = `${itemKat} ${item.nama_sppg || ''} ${item.kepala_sppg || ''} ${item.sekretaris || ''} ${item.bendahara || ''} ${item.alamat || ''} ${item.kecamatan || ''} ${item.kelurahan || ''}`.toLowerCase();
                     if (!hay.includes(keyword)) return false;
                 }
                 return true;
@@ -1401,6 +1439,7 @@
         }
 
         function resetFilters() {
+            document.getElementById('filter-kategori').value = '';
             document.getElementById('filter-search').value = '';
             document.getElementById('filter-kecamatan').value = '';
             document.getElementById('filter-kelurahan').innerHTML = '<option value="">-- Semua Kelurahan --</option>';
@@ -1410,22 +1449,31 @@
         }
 
         function updateStatistics() {
-            const totalSppg = filteredRecords.length;
+            const totalUnit = filteredRecords.length;
+            let countSppg = 0;
+            let countKmp = 0;
             let totalPegawai = 0;
             let totalPenerima = 0;
             const uniqueKec = new Set();
 
             filteredRecords.forEach(item => {
-                totalPegawai += Number(item.jumlah_pegawai) || 0;
-                totalPenerima += Number(item.jumlah_penerima) || 0;
+                const kat = (item.kategori || 'SPPG').toUpperCase();
+                if (kat === 'KMP') {
+                    countKmp += 1;
+                } else {
+                    countSppg += 1;
+                    totalPegawai += Number(item.jumlah_pegawai) || 0;
+                    totalPenerima += Number(item.jumlah_penerima) || 0;
+                }
                 if (item.kecamatan) uniqueKec.add(item.kecamatan);
             });
 
-            document.getElementById('stat-total-sppg').textContent = totalSppg.toLocaleString('id-ID');
+            document.getElementById('stat-total-sppg').textContent = totalUnit.toLocaleString('id-ID');
+            document.getElementById('stat-breakdown-unit').textContent = `SPPG: ${countSppg.toLocaleString('id-ID')} • KMP: ${countKmp.toLocaleString('id-ID')}`;
             document.getElementById('stat-total-pegawai').textContent = totalPegawai.toLocaleString('id-ID');
             document.getElementById('stat-total-penerima').textContent = totalPenerima.toLocaleString('id-ID');
             document.getElementById('stat-total-kecamatan').textContent = `${uniqueKec.size} / 30`;
-            document.getElementById('count-badge-text').textContent = totalSppg;
+            document.getElementById('count-badge-text').textContent = totalUnit;
         }
 
         function switchViewMode(mode) {
@@ -1443,22 +1491,30 @@
                     <div class="empty-state">
                         <div class="empty-icon"><i class="fas fa-folder-open"></i></div>
                         <h3>Tidak Ada Data Ditemukan</h3>
-                        <p>Belum ada data SPPG yang masuk atau tidak sesuai dengan filter pencarian Anda.</p>
+                        <p>Belum ada data SPPG / KMP yang masuk atau tidak sesuai dengan filter pencarian Anda.</p>
                     </div>`;
                 return;
             }
 
             if (currentViewMode === 'table') {
-                let rows = filteredRecords.map((item, idx) => `
+                let rows = filteredRecords.map((item, idx) => {
+                    const kat = (item.kategori || 'SPPG').toUpperCase();
+                    const isKmp = kat === 'KMP';
+                    const pengurusInfo = isKmp
+                        ? `Sek: ${escapeHTML(item.sekretaris || '-')} | Bend: ${escapeHTML(item.bendahara || '-')}`
+                        : '-';
+                    return `
                     <tr>
                         <td><strong>${idx + 1}</strong></td>
+                        <td><span class="kat-pill ${isKmp ? 'kmp' : 'sppg'}">${kat}</span></td>
                         <td><strong style="color:var(--accent-deep);">${escapeHTML(item.nama_sppg)}</strong></td>
                         <td>${escapeHTML(item.kecamatan)}</td>
                         <td>${escapeHTML(item.kelurahan)}</td>
                         <td>${escapeHTML(item.alamat)}</td>
                         <td>${escapeHTML(item.kepala_sppg)}</td>
-                        <td style="text-align:center;">${Number(item.jumlah_pegawai || 0).toLocaleString('id-ID')}</td>
-                        <td style="text-align:center;"><strong>${Number(item.jumlah_penerima || 0).toLocaleString('id-ID')}</strong></td>
+                        <td>${pengurusInfo}</td>
+                        <td style="text-align:center;">${isKmp ? '-' : Number(item.jumlah_pegawai || 0).toLocaleString('id-ID')}</td>
+                        <td style="text-align:center;"><strong>${isKmp ? '-' : Number(item.jumlah_penerima || 0).toLocaleString('id-ID')}</strong></td>
                         <td>
                             ${item.evident_lokasi 
                                 ? `<button type="button" class="btn-mini-preview" onclick="openPdfModal('${escapeHTML(item.evident_lokasi)}', '${escapeHTML(item.nama_sppg)}')"><i class="fas fa-file-pdf"></i> PDF</button>` 
@@ -1469,7 +1525,7 @@
                             <button type="button" class="action-btn action-delete" onclick="confirmDeleteRecord(${item.id})"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
-                `).join('');
+                `}).join('');
 
                 container.innerHTML = `
                     <div class="table-wrapper">
@@ -1477,11 +1533,13 @@
                             <thead>
                                 <tr>
                                     <th>No</th>
-                                    <th>Nama SPPG</th>
+                                    <th>Kategori</th>
+                                    <th>Nama SPPG / KMP</th>
                                     <th>Kecamatan</th>
                                     <th>Kelurahan</th>
                                     <th>Alamat</th>
-                                    <th>Kepala SPPG</th>
+                                    <th>Kepala / Ketua</th>
+                                    <th>Sekretaris & Bendahara (KMP)</th>
                                     <th>Pegawai</th>
                                     <th>Penerima</th>
                                     <th>Evident</th>
@@ -1496,32 +1554,57 @@
 
             // CARD VIEW
             const cardsHtml = filteredRecords.map(item => {
+                const kat = (item.kategori || 'SPPG').toUpperCase();
+                const isKmp = kat === 'KMP';
                 const fileNameLabel = item.evident_lokasi ? item.evident_lokasi.split('/').pop() : 'Tidak ada file';
+
+                const bodyFields = isKmp ? `
+                    <div class="data-item"><span class="data-label">Kecamatan / Kelurahan</span><span class="data-value">${escapeHTML(item.kecamatan)} / ${escapeHTML(item.kelurahan)}</span></div>
+                    <div class="data-item"><span class="data-label">Alamat</span><span class="data-value">${escapeHTML(item.alamat)}</span></div>
+                    <div class="data-item"><span class="data-label">Ketua</span><span class="data-value">${escapeHTML(item.kepala_sppg)}</span></div>
+                    <div class="data-item"><span class="data-label">Sekretaris</span><span class="data-value">${escapeHTML(item.sekretaris || '-')}</span></div>
+                    <div class="data-item"><span class="data-label">Bendahara</span><span class="data-value">${escapeHTML(item.bendahara || '-')}</span></div>
+                    <div class="data-item">
+                        <span class="data-label">Evident Layout SOTK</span>
+                        <div class="data-value file-row">
+                            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                <i class="fas fa-file-pdf" style="color:#ef4444; margin-right:4px;"></i> ${escapeHTML(fileNameLabel)}
+                            </span>
+                            ${item.evident_lokasi ? `<button type="button" class="btn-mini-preview" onclick="openPdfModal('${escapeHTML(item.evident_lokasi)}', '${escapeHTML(item.nama_sppg)}')"><i class="fas fa-eye"></i> Lihat PDF</button>` : ''}
+                        </div>
+                    </div>
+                ` : `
+                    <div class="data-item"><span class="data-label">Kecamatan / Kelurahan</span><span class="data-value">${escapeHTML(item.kecamatan)} / ${escapeHTML(item.kelurahan)}</span></div>
+                    <div class="data-item"><span class="data-label">Alamat</span><span class="data-value">${escapeHTML(item.alamat)}</span></div>
+                    <div class="data-item"><span class="data-label">Kepala SPPG</span><span class="data-value">${escapeHTML(item.kepala_sppg)}</span></div>
+                    <div class="data-item"><span class="data-label">Jumlah Pegawai</span><span class="data-value">${Number(item.jumlah_pegawai || 0).toLocaleString('id-ID')} Orang</span></div>
+                    <div class="data-item"><span class="data-label">Penerima Manfaat / Sekolah</span><span class="data-value">${Number(item.jumlah_penerima || 0).toLocaleString('id-ID')} Target</span></div>
+                    <div class="data-item">
+                        <span class="data-label">Evident Lokasi</span>
+                        <div class="data-value file-row">
+                            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                <i class="fas fa-file-pdf" style="color:#ef4444; margin-right:4px;"></i> ${escapeHTML(fileNameLabel)}
+                            </span>
+                            ${item.evident_lokasi ? `<button type="button" class="btn-mini-preview" onclick="openPdfModal('${escapeHTML(item.evident_lokasi)}', '${escapeHTML(item.nama_sppg)}')"><i class="fas fa-eye"></i> Lihat PDF</button>` : ''}
+                        </div>
+                    </div>
+                `;
+
                 return `
                     <div class="data-card">
-                        <div class="card-decoration"></div>
+                        <div class="card-decoration ${isKmp ? 'kmp-bar' : ''}"></div>
                         <div class="card-header">
                             <div class="card-header-left">
-                                <div class="card-icon"><i class="fas fa-building"></i></div>
+                                <div class="card-icon ${isKmp ? 'kmp-icon' : ''}"><i class="fas ${isKmp ? 'fa-users-cog' : 'fa-building'}"></i></div>
                                 <div class="card-title">${escapeHTML(item.nama_sppg)}</div>
                             </div>
-                            <span class="status-pill-verified"><i class="fas fa-check"></i> Terdata</span>
+                            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+                                <span class="kat-pill ${isKmp ? 'kmp' : 'sppg'}">${kat}</span>
+                                <span class="status-pill-verified"><i class="fas fa-check"></i> Terdata</span>
+                            </div>
                         </div>
                         <div class="data-list">
-                            <div class="data-item"><span class="data-label">Kecamatan / Kelurahan</span><span class="data-value">${escapeHTML(item.kecamatan)} / ${escapeHTML(item.kelurahan)}</span></div>
-                            <div class="data-item"><span class="data-label">Alamat</span><span class="data-value">${escapeHTML(item.alamat)}</span></div>
-                            <div class="data-item"><span class="data-label">Kepala SPPG</span><span class="data-value">${escapeHTML(item.kepala_sppg)}</span></div>
-                            <div class="data-item"><span class="data-label">Jumlah Pegawai</span><span class="data-value">${Number(item.jumlah_pegawai || 0).toLocaleString('id-ID')} Orang</span></div>
-                            <div class="data-item"><span class="data-label">Penerima Manfaat / Sekolah</span><span class="data-value">${Number(item.jumlah_penerima || 0).toLocaleString('id-ID')} Target</span></div>
-                            <div class="data-item">
-                                <span class="data-label">Evident Lokasi</span>
-                                <div class="data-value file-row">
-                                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                                        <i class="fas fa-file-pdf" style="color:#ef4444; margin-right:4px;"></i> ${escapeHTML(fileNameLabel)}
-                                    </span>
-                                    ${item.evident_lokasi ? `<button type="button" class="btn-mini-preview" onclick="openPdfModal('${escapeHTML(item.evident_lokasi)}', '${escapeHTML(item.nama_sppg)}')"><i class="fas fa-eye"></i> Lihat PDF</button>` : ''}
-                                </div>
-                            </div>
+                            ${bodyFields}
                         </div>
                         <div class="card-actions">
                             <button type="button" class="action-btn action-edit" onclick="openEditModal(${item.id})"><i class="fas fa-edit"></i> Edit</button>
@@ -1537,11 +1620,25 @@
         // ==========================================
         // EDIT & HAPUS PERMANEN (DB + STORAGE BUCKET)
         // ==========================================
+        function onEditKategoriChange() {
+            const kat = document.getElementById('edit-kategori').value;
+            const isKmp = kat === 'KMP';
+            document.getElementById('edit-modal-heading').innerHTML = `<i class="fas fa-edit"></i> Edit Data ${kat}`;
+            document.getElementById('edit-label-nama').textContent = isKmp ? 'Nama KMP' : 'Nama SPPG';
+            document.getElementById('edit-label-kepala').textContent = isKmp ? 'Ketua' : 'Kepala SPPG';
+            document.getElementById('edit-sppg-numbers-grid').style.display = isKmp ? 'none' : 'grid';
+            document.getElementById('edit-kmp-pengurus-grid').style.display = isKmp ? 'grid' : 'none';
+        }
+
         function openEditModal(id) {
             const item = allRecords.find(r => r.id === id);
             if (!item) return;
 
+            const kat = (item.kategori || 'SPPG').toUpperCase();
             document.getElementById('edit-id').value = item.id;
+            document.getElementById('edit-kategori').value = kat;
+            onEditKategoriChange();
+
             document.getElementById('edit-sppg').value = item.nama_sppg || '';
             document.getElementById('edit-kecamatan').value = item.kecamatan || '';
             updateEditKelurahan();
@@ -1550,6 +1647,8 @@
             document.getElementById('edit-kepala').value = item.kepala_sppg || '';
             document.getElementById('edit-pegawai').value = item.jumlah_pegawai ?? 0;
             document.getElementById('edit-penerima').value = item.jumlah_penerima ?? 0;
+            document.getElementById('edit-sekretaris').value = item.sekretaris || '';
+            document.getElementById('edit-bendahara').value = item.bendahara || '';
 
             document.getElementById('editModal').classList.add('show');
         }
@@ -1559,14 +1658,20 @@
         async function saveEditedRecord(e) {
             e.preventDefault();
             const id = Number(document.getElementById('edit-id').value);
+            const kat = document.getElementById('edit-kategori').value || 'SPPG';
+            const isKmp = kat === 'KMP';
+
             const payload = {
+                kategori: kat,
                 nama_sppg: document.getElementById('edit-sppg').value.trim(),
                 kecamatan: document.getElementById('edit-kecamatan').value,
                 kelurahan: document.getElementById('edit-kelurahan').value,
                 alamat: document.getElementById('edit-alamat').value.trim(),
                 kepala_sppg: document.getElementById('edit-kepala').value.trim(),
-                jumlah_pegawai: parseInt(document.getElementById('edit-pegawai').value, 10) || 0,
-                jumlah_penerima: parseInt(document.getElementById('edit-penerima').value, 10) || 0
+                jumlah_pegawai: isKmp ? 0 : (parseInt(document.getElementById('edit-pegawai').value, 10) || 0),
+                jumlah_penerima: isKmp ? 0 : (parseInt(document.getElementById('edit-penerima').value, 10) || 0),
+                sekretaris: isKmp ? document.getElementById('edit-sekretaris').value.trim() : null,
+                bendahara: isKmp ? document.getElementById('edit-bendahara').value.trim() : null
             };
 
             const btn = document.getElementById('btn-save-edit');
@@ -1722,45 +1827,53 @@
             // ==========================================
             const rekapMap = {};
             Object.keys(wilayahBandung).sort().forEach(kec => {
-                rekapMap[kec] = { kecamatan: kec, unit: 0, pegawai: 0, penerima: 0 };
+                rekapMap[kec] = { kecamatan: kec, unitSppg: 0, unitKmp: 0, totalUnit: 0, pegawai: 0, penerima: 0 };
             });
 
             filteredRecords.forEach(item => {
                 const k = item.kecamatan || 'Lainnya';
-                if (!rekapMap[k]) rekapMap[k] = { kecamatan: k, unit: 0, pegawai: 0, penerima: 0 };
-                rekapMap[k].unit += 1;
-                rekapMap[k].pegawai += Number(item.jumlah_pegawai) || 0;
-                rekapMap[k].penerima += Number(item.jumlah_penerima) || 0;
+                const kat = (item.kategori || 'SPPG').toUpperCase();
+                if (!rekapMap[k]) rekapMap[k] = { kecamatan: k, unitSppg: 0, unitKmp: 0, totalUnit: 0, pegawai: 0, penerima: 0 };
+                if (kat === 'KMP') {
+                    rekapMap[k].unitKmp += 1;
+                } else {
+                    rekapMap[k].unitSppg += 1;
+                    rekapMap[k].pegawai += Number(item.jumlah_pegawai) || 0;
+                    rekapMap[k].penerima += Number(item.jumlah_penerima) || 0;
+                }
+                rekapMap[k].totalUnit += 1;
             });
 
             const rekapList = Object.values(rekapMap);
-            let sumUnit = 0, sumPegawai = 0, sumPenerima = 0;
+            let sumSppg = 0, sumKmp = 0, sumTotalUnit = 0, sumPegawai = 0, sumPenerima = 0;
 
             const ws1Aoa = [
-                ["REKAPITULASI DATA SPPG & KMP KOTA BANDUNG PER KECAMATAN", "", "", "", ""],
-                [`Bagian Tata Pemerintahan Kota Bandung  •  Dicetak pada: ${tglCetak}`, "", "", "", ""],
-                ["", "", "", "", ""],
-                ["No", "Kecamatan", "Jumlah Unit SPPG", "Total Pegawai", "Total Penerima Manfaat"]
+                ["REKAPITULASI DATA SPPG & KMP KOTA BANDUNG PER KECAMATAN", "", "", "", "", "", ""],
+                [`Bagian Tata Pemerintahan Kota Bandung  •  Dicetak pada: ${tglCetak}`, "", "", "", "", "", ""],
+                ["", "", "", "", "", "", ""],
+                ["No", "Kecamatan", "Unit SPPG", "Unit KMP", "Total Unit", "Total Pegawai (SPPG)", "Total Penerima Manfaat"]
             ];
 
             rekapList.forEach((row, idx) => {
-                sumUnit += row.unit;
+                sumSppg += row.unitSppg;
+                sumKmp += row.unitKmp;
+                sumTotalUnit += row.totalUnit;
                 sumPegawai += row.pegawai;
                 sumPenerima += row.penerima;
-                ws1Aoa.push([idx + 1, row.kecamatan, row.unit, row.pegawai, row.penerima]);
+                ws1Aoa.push([idx + 1, row.kecamatan, row.unitSppg, row.unitKmp, row.totalUnit, row.pegawai, row.penerima]);
             });
 
-            ws1Aoa.push(["", "TOTAL KESELURUHAN", sumUnit, sumPegawai, sumPenerima]);
+            ws1Aoa.push(["", "TOTAL KESELURUHAN", sumSppg, sumKmp, sumTotalUnit, sumPegawai, sumPenerima]);
 
             const ws1 = XLSX.utils.aoa_to_sheet(ws1Aoa);
             ws1['!merges'] = [
-                { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
-                { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } }
+                { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } },
+                { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }
             ];
-            ws1['!cols'] = [{ wch: 6 }, { wch: 26 }, { wch: 20 }, { wch: 18 }, { wch: 24 }];
+            ws1['!cols'] = [{ wch: 6 }, { wch: 24 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 22 }, { wch: 24 }];
             ws1['!rows'] = [{ hpt: 28 }, { hpt: 20 }, { hpt: 10 }, { hpt: 26 }];
 
-            for (let c = 0; c < 5; c++) {
+            for (let c = 0; c < 7; c++) {
                 ws1[XLSX.utils.encode_cell({ r: 0, c })].s = styleTitleBanner;
                 ws1[XLSX.utils.encode_cell({ r: 1, c })].s = styleSubBanner;
                 ws1[XLSX.utils.encode_cell({ r: 3, c })].s = styleTableHeader;
@@ -1770,7 +1883,7 @@
             for (let r = 4; r < totalRowIdx1; r++) {
                 ws1['!rows'][r] = { hpt: 21 };
                 const rowBg = (r % 2 === 0) ? "FFFFFF" : "F0F7FF";
-                for (let c = 0; c < 5; c++) {
+                for (let c = 0; c < 7; c++) {
                     const ref = XLSX.utils.encode_cell({ r, c });
                     const isNum = c >= 2;
                     ws1[ref].s = {
@@ -1784,7 +1897,7 @@
             }
 
             ws1['!rows'][totalRowIdx1] = { hpt: 24 };
-            for (let c = 0; c < 5; c++) {
+            for (let c = 0; c < 7; c++) {
                 const ref = XLSX.utils.encode_cell({ r: totalRowIdx1, c });
                 const isNum = c >= 2;
                 ws1[ref].s = {
@@ -1797,58 +1910,66 @@
             }
 
             // ==========================================
-            // SHEET 2: DETAIL SELURUH DATA SPPG
+            // SHEET 2: DETAIL SELURUH DATA SPPG & KMP
             // ==========================================
             const ws2Aoa = [
-                ["DAFTAR DETAIL UNIT SPPG & KMP KOTA BANDUNG", "", "", "", "", "", "", "", ""],
-                [`Total Data Terlampir: ${filteredRecords.length} Unit  •  Dicetak pada: ${tglCetak}`, "", "", "", "", "", "", "", ""],
-                ["", "", "", "", "", "", "", "", ""],
-                ["No", "Nama SPPG", "Kecamatan", "Kelurahan", "Alamat Lengkap", "Kepala SPPG", "Jumlah Pegawai", "Penerima Manfaat", "Tautan Evident PDF"]
+                ["DAFTAR DETAIL UNIT SPPG & KMP KOTA BANDUNG", "", "", "", "", "", "", "", "", "", "", ""],
+                [`Total Data Terlampir: ${filteredRecords.length} Unit  •  Dicetak pada: ${tglCetak}`, "", "", "", "", "", "", "", "", "", "", ""],
+                ["", "", "", "", "", "", "", "", "", "", "", ""],
+                ["No", "Kategori", "Nama SPPG / KMP", "Kecamatan", "Kelurahan", "Alamat Lengkap", "Kepala SPPG / Ketua", "Sekretaris (KMP)", "Bendahara (KMP)", "Jumlah Pegawai", "Penerima Manfaat", "Tautan Evident PDF"]
             ];
 
             let detailSumPegawai = 0;
             let detailSumPenerima = 0;
 
             filteredRecords.forEach((item, idx) => {
-                const peg = Number(item.jumlah_pegawai) || 0;
-                const pen = Number(item.jumlah_penerima) || 0;
+                const kat = (item.kategori || 'SPPG').toUpperCase();
+                const isKmp = kat === 'KMP';
+                const peg = isKmp ? 0 : (Number(item.jumlah_pegawai) || 0);
+                const pen = isKmp ? 0 : (Number(item.jumlah_penerima) || 0);
                 detailSumPegawai += peg;
                 detailSumPenerima += pen;
 
                 ws2Aoa.push([
                     idx + 1,
+                    kat,
                     item.nama_sppg || '-',
                     item.kecamatan || '-',
                     item.kelurahan || '-',
                     item.alamat || '-',
                     item.kepala_sppg || '-',
-                    peg,
-                    pen,
+                    isKmp ? (item.sekretaris || '-') : '-',
+                    isKmp ? (item.bendahara || '-') : '-',
+                    isKmp ? '-' : peg,
+                    isKmp ? '-' : pen,
                     item.evident_lokasi || '-'
                 ]);
             });
 
-            ws2Aoa.push(["", "TOTAL KESELURUHAN", "", "", "", "", detailSumPegawai, detailSumPenerima, ""]);
+            ws2Aoa.push(["", "TOTAL KESELURUHAN", "", "", "", "", "", "", "", detailSumPegawai, detailSumPenerima, ""]);
 
             const ws2 = XLSX.utils.aoa_to_sheet(ws2Aoa);
             ws2['!merges'] = [
-                { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } },
-                { s: { r: 1, c: 0 }, e: { r: 1, c: 8 } }
+                { s: { r: 0, c: 0 }, e: { r: 0, c: 11 } },
+                { s: { r: 1, c: 0 }, e: { r: 1, c: 11 } }
             ];
             ws2['!cols'] = [
                 { wch: 6 },
+                { wch: 12 },
                 { wch: 28 },
                 { wch: 18 },
                 { wch: 20 },
-                { wch: 38 },
+                { wch: 36 },
                 { wch: 24 },
+                { wch: 22 },
+                { wch: 22 },
                 { wch: 16 },
                 { wch: 18 },
                 { wch: 44 }
             ];
             ws2['!rows'] = [{ hpt: 28 }, { hpt: 20 }, { hpt: 10 }, { hpt: 26 }];
 
-            for (let c = 0; c < 9; c++) {
+            for (let c = 0; c < 12; c++) {
                 ws2[XLSX.utils.encode_cell({ r: 0, c })].s = styleTitleBanner;
                 ws2[XLSX.utils.encode_cell({ r: 1, c })].s = styleSubBanner;
                 ws2[XLSX.utils.encode_cell({ r: 3, c })].s = styleTableHeader;
@@ -1856,27 +1977,28 @@
 
             const totalRowIdx2 = ws2Aoa.length - 1;
             for (let r = 4; r < totalRowIdx2; r++) {
-                const alamatLen = String(ws2Aoa[r][4] || '').length;
+                const alamatLen = String(ws2Aoa[r][5] || '').length;
                 ws2['!rows'][r] = { hpt: alamatLen > 45 ? 32 : 22 };
                 const rowBg = (r % 2 === 0) ? "FFFFFF" : "F0F7FF";
 
-                for (let c = 0; c < 9; c++) {
+                for (let c = 0; c < 12; c++) {
                     const ref = XLSX.utils.encode_cell({ r, c });
-                    const isNum = c === 6 || c === 7;
-                    const isLink = c === 8 && ws2Aoa[r][8] !== '-';
+                    const val = ws2Aoa[r][c];
+                    const isNum = (c === 9 || c === 10) && typeof val === 'number';
+                    const isLink = c === 11 && val !== '-';
                     ws2[ref].s = {
                         font: {
                             name: "Calibri",
                             sz: 10.5,
-                            bold: c === 1,
+                            bold: c === 1 || c === 2,
                             underline: isLink,
                             color: { rgb: isLink ? "2563EB" : "0F172A" }
                         },
                         fill: { fgColor: { rgb: rowBg } },
                         alignment: {
-                            horizontal: c === 0 ? "center" : isNum ? "right" : "left",
+                            horizontal: (c === 0 || c === 1 || ((c === 9 || c === 10) && val === '-')) ? "center" : isNum ? "right" : "left",
                             vertical: "center",
-                            wrapText: c === 1 || c === 4
+                            wrapText: c === 2 || c === 5
                         },
                         border: borderThin,
                         numFmt: isNum ? "#,##0" : undefined
@@ -1885,9 +2007,9 @@
             }
 
             ws2['!rows'][totalRowIdx2] = { hpt: 24 };
-            for (let c = 0; c < 9; c++) {
+            for (let c = 0; c < 12; c++) {
                 const ref = XLSX.utils.encode_cell({ r: totalRowIdx2, c });
-                const isNum = c === 6 || c === 7;
+                const isNum = c === 9 || c === 10;
                 ws2[ref].s = {
                     font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "1E3A8A" } },
                     fill: { fgColor: { rgb: "DBEAFE" } },
@@ -1899,7 +2021,7 @@
 
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws1, "Rekap Per Kecamatan");
-            XLSX.utils.book_append_sheet(wb, ws2, "Detail Data SPPG");
+            XLSX.utils.book_append_sheet(wb, ws2, "Detail Data SPPG & KMP");
 
             XLSX.writeFile(wb, `Rekapitulasi_SPPG_KMP_Bandung_${dateStr}.xlsx`);
             showToast("File Excel berhasil diunduh.", "success");
@@ -1927,4 +2049,3 @@
         });
     </script>
 </body>
-</html>
