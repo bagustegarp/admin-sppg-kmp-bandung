@@ -680,6 +680,21 @@
         .pdf-frame-container { flex: 1; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: var(--radius-md); overflow: hidden; }
         .pdf-frame-container iframe { width: 100%; height: 100%; border: none; }
 
+        .map-info-strip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            background: #f0f7ff;
+            border: 1px solid #dbeafe;
+            border-radius: var(--radius-sm);
+            padding: 9px 12px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: var(--text-primary);
+        }
+
         .confirm-actions { display: flex; gap: 10px; margin-top: 18px; }
         .confirm-actions button { flex: 1; padding: 10px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 700; cursor: pointer; border: none; }
         .btn-cancel-confirm { background: #eff6ff; color: var(--accent-deep); }
@@ -1005,7 +1020,12 @@
                 </div>
                 <div class="input-group">
                     <label class="form-label">Titik Koordinat GPS (Latitude, Longitude)</label>
-                    <input type="text" id="edit-koordinat" class="custom-input" placeholder="Contoh: -6.917500, 107.619100">
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <input type="text" id="edit-koordinat" class="custom-input" placeholder="Contoh: -6.917500, 107.619100" style="flex:1;">
+                        <button type="button" class="btn-mini-preview btn-mini-maps" style="height:36px; padding:0 12px;" onclick="previewEditKoordinat()" title="Pratinjau Koordinat di Peta">
+                            <i class="fas fa-map-marked-alt"></i> Preview
+                        </button>
+                    </div>
                 </div>
                 <div class="input-group">
                     <label class="form-label" id="edit-label-kepala">Kepala SPPG</label>
@@ -1049,6 +1069,34 @@
                     <button type="submit" class="btn-yes-confirm" id="btn-save-edit">Simpan Perubahan</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL PRATINJAU KOORDINAT PETA -->
+    <div id="mapPreviewModal" class="modal-overlay" style="z-index: 1050;">
+        <div class="modal-box pdf-modal-box">
+            <div class="modal-header">
+                <h3 id="map-modal-title"><i class="fas fa-map-marked-alt" style="color: #0284c7;"></i> Pratinjau Lokasi Koordinat</h3>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" id="map-copy-coord-btn" class="action-btn" style="background:#eff6ff; color:var(--accent-deep); border:1px solid #bfdbfe; padding:7px 14px;">
+                        <i class="fas fa-copy"></i> Salin Koordinat
+                    </button>
+                    <a id="map-open-gmaps" href="#" target="_blank" rel="noopener noreferrer" class="action-btn" style="background:#0284c7; color:#ffffff; text-decoration: none; padding:7px 14px;">
+                        <i class="fas fa-external-link-alt"></i> Buka Google Maps
+                    </a>
+                    <button class="close-modal" onclick="closeMapModal()"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div class="map-info-strip">
+                <div>
+                    <strong style="color:var(--accent-deep);"><i class="fas fa-crosshairs"></i> Koordinat:</strong>
+                    <span id="map-coord-display" style="font-weight:700;">-</span>
+                </div>
+                <div id="map-address-display" style="color:var(--text-secondary); font-weight:600; max-width:520px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
+            </div>
+            <div class="pdf-frame-container">
+                <iframe id="map-preview-iframe" title="Pratinjau Peta Lokasi" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
         </div>
     </div>
 
@@ -1208,7 +1256,8 @@
 
             const hasCoords = lat !== null && !Number.isNaN(lat) && lng !== null && !Number.isNaN(lng);
             const mapsUrl = hasCoords ? `https://www.google.com/maps?q=${encodeURIComponent(lat + ',' + lng)}` : '';
-            return { hasCoords, lat, lng, text, mapsUrl };
+            const embedUrl = hasCoords ? `https://maps.google.com/maps?q=${encodeURIComponent(lat + ',' + lng)}&hl=id&z=17&output=embed` : '';
+            return { hasCoords, lat, lng, text, mapsUrl, embedUrl };
         }
 
         // Helper WhatsApp Link Penanggungjawab
@@ -1437,14 +1486,13 @@
         }
 
         // ==========================================
-        // AMBIL DATA DATABASE (ANTI-LAG)
+        // AMBIL & URUTKAN DATA DATABASE
         // ==========================================
         async function fetchAllSupabaseData(showNotif = false) {
             try {
                 const { data, error } = await supabaseClient
                     .from('data_sppg')
-                    .select('*')
-                    .order('id', { ascending: false });
+                    .select('*');
 
                 if (error) throw error;
                 allRecords = Array.isArray(data) ? data : [];
@@ -1459,6 +1507,31 @@
         function debouncedFilter() {
             clearTimeout(searchDebounceTimer);
             searchDebounceTimer = setTimeout(applyFilters, 180);
+        }
+
+        function getRecordTime(item) {
+            if (item && item.created_at) {
+                const parsed = Date.parse(item.created_at);
+                if (!Number.isNaN(parsed)) return parsed;
+            }
+            return null;
+        }
+
+        function compareRecordChronological(a, b, direction = 'desc') {
+            const mult = direction === 'asc' ? 1 : -1;
+            const timeA = getRecordTime(a);
+            const timeB = getRecordTime(b);
+            if (timeA !== null && timeB !== null && timeA !== timeB) {
+                return (timeA - timeB) * mult;
+            }
+
+            const numA = Number(a.id);
+            const numB = Number(b.id);
+            if (!Number.isNaN(numA) && !Number.isNaN(numB) && numA !== numB) {
+                return (numA - numB) * mult;
+            }
+
+            return String(a.id || '').localeCompare(String(b.id || '')) * mult;
         }
 
         function applyFilters() {
@@ -1482,11 +1555,23 @@
             });
 
             result.sort((a, b) => {
-                if (sortBy === 'oldest') return (Number(a.id) || 0) - (Number(b.id) || 0);
-                if (sortBy === 'sppg_asc') return (a.nama_sppg || '').localeCompare(b.nama_sppg || '');
-                if (sortBy === 'kec_asc') return (a.kecamatan || '').localeCompare(b.kecamatan || '');
-                if (sortBy === 'penerima_desc') return (Number(b.jumlah_penerima) || 0) - (Number(a.jumlah_penerima) || 0);
-                return (Number(b.id) || 0) - (Number(a.id) || 0);
+                if (sortBy === 'oldest') {
+                    return compareRecordChronological(a, b, 'asc');
+                }
+                if (sortBy === 'sppg_asc') {
+                    return (a.nama_sppg || '').trim().localeCompare((b.nama_sppg || '').trim(), 'id', { sensitivity: 'base' });
+                }
+                if (sortBy === 'kec_asc') {
+                    const kecDiff = (a.kecamatan || '').trim().localeCompare((b.kecamatan || '').trim(), 'id', { sensitivity: 'base' });
+                    if (kecDiff !== 0) return kecDiff;
+                    return (a.nama_sppg || '').trim().localeCompare((b.nama_sppg || '').trim(), 'id', { sensitivity: 'base' });
+                }
+                if (sortBy === 'penerima_desc') {
+                    const penDiff = (Number(b.jumlah_penerima) || 0) - (Number(a.jumlah_penerima) || 0);
+                    if (penDiff !== 0) return penDiff;
+                    return compareRecordChronological(a, b, 'desc');
+                }
+                return compareRecordChronological(a, b, 'desc');
             });
 
             filteredRecords = result;
@@ -1568,7 +1653,10 @@
                     const gpsCell = coord.hasCoords
                         ? `<div style="display:flex; flex-direction:column; gap:4px;">
                                <span style="font-size:11px; font-weight:600;">${escapeHTML(coord.text)}</span>
-                               <a href="${escapeHTML(coord.mapsUrl)}" target="_blank" rel="noopener noreferrer" class="btn-mini-preview btn-mini-maps" style="width:fit-content;"><i class="fas fa-map-marker-alt"></i> Maps</a>
+                               <div style="display:flex; align-items:center; gap:4px;">
+                                   <button type="button" class="btn-mini-preview btn-mini-maps" onclick="openMapModalById('${safeId}')" title="Pratinjau Peta"><i class="fas fa-map-marked-alt"></i> Preview</button>
+                                   <a href="${escapeHTML(coord.mapsUrl)}" target="_blank" rel="noopener noreferrer" class="btn-mini-preview" style="background:#0f766e;" title="Buka Google Maps"><i class="fas fa-external-link-alt"></i></a>
+                               </div>
                            </div>`
                         : (coord.text ? escapeHTML(coord.text) : '-');
 
@@ -1644,7 +1732,12 @@
                             <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                                 <i class="fas fa-map-pin" style="color:#0284c7; margin-right:4px;"></i> ${escapeHTML(coord.text || 'Belum diisi')}
                             </span>
-                            ${coord.hasCoords ? `<a href="${escapeHTML(coord.mapsUrl)}" target="_blank" rel="noopener noreferrer" class="btn-mini-preview btn-mini-maps"><i class="fas fa-external-link-alt"></i> Buka Maps</a>` : ''}
+                            ${coord.hasCoords ? `
+                                <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
+                                    <button type="button" class="btn-mini-preview btn-mini-maps" onclick="openMapModalById('${safeId}')" title="Pratinjau Peta"><i class="fas fa-map-marked-alt"></i> Preview</button>
+                                    <a href="${escapeHTML(coord.mapsUrl)}" target="_blank" rel="noopener noreferrer" class="btn-mini-preview" style="background:#0f766e;" title="Buka Google Maps"><i class="fas fa-external-link-alt"></i></a>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 `;
@@ -1723,6 +1816,66 @@
             }).join('');
 
             container.innerHTML = `<div class="preview-grid">${cardsHtml}</div>`;
+        }
+
+        // ==========================================
+        // PRATINJAU KOORDINAT PETA INTERAKTIF
+        // ==========================================
+        function openMapModalById(id) {
+            const item = allRecords.find(r => String(r.id) === String(id));
+            if (!item) {
+                showToast("Data lokasi tidak ditemukan.", "error");
+                return;
+            }
+            const coord = getCoordinateInfo(item);
+            if (!coord.hasCoords) {
+                showToast("Titik koordinat belum valid untuk dipratinjau.", "warning");
+                return;
+            }
+            const wilayahInfo = [item.alamat, item.kelurahan ? `Kel. ${item.kelurahan}` : '', item.kecamatan ? `Kec. ${item.kecamatan}` : ''].filter(Boolean).join(', ');
+            openMapModalWithCoords(coord.lat, coord.lng, item.nama_sppg || 'Unit Terdata', wilayahInfo);
+        }
+
+        function previewEditKoordinat() {
+            const raw = document.getElementById('edit-koordinat').value.trim();
+            const nama = document.getElementById('edit-sppg').value.trim() || 'Lokasi Edit';
+            const alamat = document.getElementById('edit-alamat').value.trim();
+            const coord = getCoordinateInfo({ koordinat: raw });
+            if (!coord.hasCoords) {
+                showToast("Masukkan format koordinat yang valid (contoh: -6.9175, 107.6191).", "warning");
+                document.getElementById('edit-koordinat').focus();
+                return;
+            }
+            openMapModalWithCoords(coord.lat, coord.lng, nama, alamat);
+        }
+
+        function openMapModalWithCoords(lat, lng, unitName, addressText) {
+            const coordStr = `${lat}, ${lng}`;
+            const mapsUrl = `https://www.google.com/maps?q=${encodeURIComponent(lat + ',' + lng)}`;
+            const embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(lat + ',' + lng)}&hl=id&z=17&output=embed`;
+
+            document.getElementById('map-modal-title').innerHTML = `<i class="fas fa-map-marked-alt" style="color:#0284c7;"></i> Lokasi: ${escapeHTML(unitName)}`;
+            document.getElementById('map-coord-display').textContent = coordStr;
+            document.getElementById('map-address-display').textContent = addressText || '';
+            document.getElementById('map-address-display').title = addressText || '';
+            document.getElementById('map-open-gmaps').href = mapsUrl;
+            document.getElementById('map-preview-iframe').src = embedUrl;
+
+            document.getElementById('map-copy-coord-btn').onclick = async () => {
+                try {
+                    await navigator.clipboard.writeText(coordStr);
+                    showToast(`Koordinat ${coordStr} disalin.`, "success");
+                } catch (err) {
+                    showToast("Gagal menyalin koordinat.", "warning");
+                }
+            };
+
+            document.getElementById('mapPreviewModal').classList.add('show');
+        }
+
+        function closeMapModal() {
+            document.getElementById('mapPreviewModal').classList.remove('show');
+            document.getElementById('map-preview-iframe').src = 'about:blank';
         }
 
         // ==========================================
@@ -1873,7 +2026,6 @@
             yesBtn.textContent = 'Menghapus...';
 
             try {
-                // Hapus baris dari tabel database terlebih dahulu & pastikan terhapus
                 const { data: deletedRows, error } = await supabaseClient
                     .from('data_sppg')
                     .delete()
@@ -1885,7 +2037,6 @@
                     throw new Error("Izin DELETE di Supabase belum aktif (RLS Policy).");
                 }
 
-                // Hapus file PDF di Storage Bucket jika ada
                 if (item && item.evident_lokasi) {
                     try {
                         let filePath = '';
