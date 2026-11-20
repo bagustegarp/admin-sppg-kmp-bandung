@@ -596,6 +596,8 @@
             box-shadow: var(--card-shadow); 
             transition: transform 0.25s ease, border-color 0.25s ease; 
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         .data-card:hover { transform: translateY(-3px); border-color: #60a5fa; }
         .card-decoration { position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #0ea5e9 100%); }
@@ -610,14 +612,18 @@
         .kat-pill.sppg { background: #dbeafe; color: #1e3a8a; border: 1px solid #93c5fd; }
         .kat-pill.kmp { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
 
-        .data-list { display: flex; flex-direction: column; gap: 8px; }
+        .data-list { display: flex; flex-direction: column; gap: 8px; flex: 1; }
         .data-item { display: flex; flex-direction: column; gap: 2px; }
         .data-label { font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.4px; }
         .data-value { font-size: 12px; font-weight: 600; color: var(--text-primary); line-height: 1.45; padding: 7px 10px; background: var(--value-bg); border-radius: var(--radius-sm); border: 1px solid var(--value-border); word-break: break-word; }
         .data-value.file-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 
-        .btn-mini-preview { background: var(--accent); color: #ffffff; border: none; border-radius: 6px; padding: 4px 9px; font-size: 10.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; }
+        .btn-mini-preview { background: var(--accent); color: #ffffff; border: none; border-radius: 6px; padding: 4px 9px; font-size: 10.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
         .btn-mini-preview:hover { background: var(--accent-deep); }
+        .btn-mini-maps { background: #0284c7; color: #ffffff; }
+        .btn-mini-maps:hover { background: #0369a1; }
+        .btn-mini-wa { background: #16a34a; color: #ffffff; }
+        .btn-mini-wa:hover { background: #15803d; }
 
         .card-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; padding-top: 11px; border-top: 1px dashed #bfdbfe; }
         .action-btn { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s ease; }
@@ -658,13 +664,13 @@
 
         /* MODALS & TOAST */
         #toast-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-        .custom-toast { background: #ffffff; border-radius: var(--radius-md); box-shadow: 0 10px 26px rgba(15, 23, 42, 0.16); padding: 12px 16px; display: flex; align-items: center; gap: 10px; min-width: 240px; max-width: 340px; border-left: 4px solid; pointer-events: all; }
+        .custom-toast { background: #ffffff; border-radius: var(--radius-md); box-shadow: 0 10px 26px rgba(15, 23, 42, 0.16); padding: 12px 16px; display: flex; align-items: center; gap: 10px; min-width: 240px; max-width: 360px; border-left: 4px solid; pointer-events: all; }
         .custom-toast.success { border-left-color: var(--success); } .custom-toast.error { border-left-color: var(--danger); } .custom-toast.warning { border-left-color: var(--warning); }
         .toast-text { font-size: 12px; font-weight: 600; color: var(--text-primary); }
 
-        .modal-overlay { position: fixed; inset: 0; background: rgba(2, 6, 23, 0.65); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); padding: 16px; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(2, 6, 23, 0.65); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); padding: 16px; overflow-y: auto; }
         .modal-overlay.show { display: flex !important; }
-        .modal-box { background: white; border-radius: var(--radius-lg); width: 440px; max-width: 100%; padding: 22px; border: 1px solid #dbeafe; box-shadow: 0 22px 50px rgba(2, 6, 23, 0.35); }
+        .modal-box { background: white; border-radius: var(--radius-lg); width: 440px; max-width: 100%; max-height: 92vh; overflow-y: auto; padding: 22px; border: 1px solid #dbeafe; box-shadow: 0 22px 50px rgba(2, 6, 23, 0.35); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #e0f2fe; padding-bottom: 10px; gap: 10px; }
         .modal-header h3 { font-family: 'Outfit', sans-serif; font-size: 16.5px; font-weight: 700; color: var(--accent-deep); display: flex; align-items: center; gap: 8px; }
         .close-modal { background: #eff6ff; border: none; width: 30px; height: 30px; border-radius: 50%; color: var(--accent-deep); cursor: pointer; display: flex; align-items: center; justify-content: center; }
@@ -832,7 +838,7 @@
                 </div>
 
                 <div class="input-group">
-                    <label class="form-label">Cari Nama / Pimpinan / Alamat</label>
+                    <label class="form-label">Cari Nama / Pengurus / Alamat</label>
                     <input type="text" id="filter-search" class="custom-input" placeholder="Ketik kata kunci pencarian..." oninput="debouncedFilter()">
                 </div>
 
@@ -965,7 +971,7 @@
 
     <!-- MODAL EDIT DATA SPPG & KMP -->
     <div id="editModal" class="modal-overlay">
-        <div class="modal-box" style="width: 480px;">
+        <div class="modal-box" style="width: 520px;">
             <div class="modal-header">
                 <h3 id="edit-modal-heading"><i class="fas fa-edit"></i> Edit Data SPPG</h3>
                 <button class="close-modal" onclick="closeEditModal()"><i class="fas fa-times"></i></button>
@@ -998,8 +1004,34 @@
                     <textarea id="edit-alamat" class="custom-textarea" rows="2" required></textarea>
                 </div>
                 <div class="input-group">
+                    <label class="form-label">Titik Koordinat GPS (Latitude, Longitude)</label>
+                    <input type="text" id="edit-koordinat" class="custom-input" placeholder="Contoh: -6.917500, 107.619100">
+                </div>
+                <div class="input-group">
                     <label class="form-label" id="edit-label-kepala">Kepala SPPG</label>
                     <input type="text" id="edit-kepala" class="custom-input" required>
+                </div>
+                <!-- PENGURUS (SEKRETARIS & BENDAHARA UNTUK SPPG & KMP) -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div class="input-group">
+                        <label class="form-label">Sekretaris</label>
+                        <input type="text" id="edit-sekretaris" class="custom-input" placeholder="Nama Sekretaris">
+                    </div>
+                    <div class="input-group">
+                        <label class="form-label">Bendahara</label>
+                        <input type="text" id="edit-bendahara" class="custom-input" placeholder="Nama Bendahara">
+                    </div>
+                </div>
+                <!-- PENANGGUNGJAWAB -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div class="input-group">
+                        <label class="form-label">Nama Penanggungjawab</label>
+                        <input type="text" id="edit-penanggungjawab" class="custom-input" placeholder="Nama Lengkap">
+                    </div>
+                    <div class="input-group">
+                        <label class="form-label">No. Telp Penanggungjawab</label>
+                        <input type="tel" id="edit-telp-penanggungjawab" class="custom-input" placeholder="08xxxxxxxxxx">
+                    </div>
                 </div>
                 <!-- KHUSUS SPPG -->
                 <div id="edit-sppg-numbers-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
@@ -1010,17 +1042,6 @@
                     <div class="input-group">
                         <label class="form-label">Penerima Manfaat / Sekolah</label>
                         <input type="number" id="edit-penerima" class="custom-input" min="0">
-                    </div>
-                </div>
-                <!-- KHUSUS KMP -->
-                <div id="edit-kmp-pengurus-grid" style="display:none; grid-template-columns:1fr 1fr; gap:10px;">
-                    <div class="input-group">
-                        <label class="form-label">Sekretaris</label>
-                        <input type="text" id="edit-sekretaris" class="custom-input">
-                    </div>
-                    <div class="input-group">
-                        <label class="form-label">Bendahara</label>
-                        <input type="text" id="edit-bendahara" class="custom-input">
                     </div>
                 </div>
                 <div class="confirm-actions">
@@ -1150,7 +1171,7 @@
             let iconColor = type === 'error' ? '#ef4444' : type === 'warning' ? '#d97706' : '#10b981';
             toast.innerHTML = `<i class="fas ${iconClass}" style="color:${iconColor}; font-size:16px;"></i><div class="toast-text">${escapeHTML(message)}</div>`;
             container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3500);
+            setTimeout(() => toast.remove(), 4000);
         }
 
         function togglePasswordVisibility(inputId, btnEl) {
@@ -1163,6 +1184,40 @@
                 input.type = 'password';
                 icon.className = 'fas fa-eye';
             }
+        }
+
+        // Helper GPS Koordinat & Google Maps URL
+        function getCoordinateInfo(item) {
+            let lat = item.latitude !== null && item.latitude !== undefined && item.latitude !== '' ? Number(item.latitude) : null;
+            let lng = item.longitude !== null && item.longitude !== undefined && item.longitude !== '' ? Number(item.longitude) : null;
+            let text = (item.koordinat || '').trim();
+
+            if ((lat === null || Number.isNaN(lat) || lng === null || Number.isNaN(lng)) && text.includes(',')) {
+                const parts = text.split(',');
+                const pLat = parseFloat(parts[0].trim());
+                const pLng = parseFloat(parts[1].trim());
+                if (!Number.isNaN(pLat) && !Number.isNaN(pLng)) {
+                    lat = pLat;
+                    lng = pLng;
+                }
+            }
+
+            if (!text && lat !== null && !Number.isNaN(lat) && lng !== null && !Number.isNaN(lng)) {
+                text = `${lat}, ${lng}`;
+            }
+
+            const hasCoords = lat !== null && !Number.isNaN(lat) && lng !== null && !Number.isNaN(lng);
+            const mapsUrl = hasCoords ? `https://www.google.com/maps?q=${encodeURIComponent(lat + ',' + lng)}` : '';
+            return { hasCoords, lat, lng, text, mapsUrl };
+        }
+
+        // Helper WhatsApp Link Penanggungjawab
+        function formatWaUrl(phone) {
+            if (!phone) return '';
+            let digits = String(phone).replace(/[^0-9]/g, '');
+            if (!digits) return '';
+            if (digits.startsWith('0')) digits = '62' + digits.slice(1);
+            return `https://wa.me/${digits}`;
         }
 
         // ==========================================
@@ -1419,18 +1474,19 @@
                 if (kec && item.kecamatan !== kec) return false;
                 if (kel && item.kelurahan !== kel) return false;
                 if (keyword) {
-                    const hay = `${itemKat} ${item.nama_sppg || ''} ${item.kepala_sppg || ''} ${item.sekretaris || ''} ${item.bendahara || ''} ${item.alamat || ''} ${item.kecamatan || ''} ${item.kelurahan || ''}`.toLowerCase();
+                    const coordInfo = getCoordinateInfo(item);
+                    const hay = `${itemKat} ${item.nama_sppg || ''} ${item.kepala_sppg || ''} ${item.sekretaris || ''} ${item.bendahara || ''} ${item.nama_penanggungjawab || ''} ${item.no_telp_penanggungjawab || ''} ${coordInfo.text} ${item.alamat || ''} ${item.kecamatan || ''} ${item.kelurahan || ''}`.toLowerCase();
                     if (!hay.includes(keyword)) return false;
                 }
                 return true;
             });
 
             result.sort((a, b) => {
-                if (sortBy === 'oldest') return (a.id || 0) - (b.id || 0);
+                if (sortBy === 'oldest') return (Number(a.id) || 0) - (Number(b.id) || 0);
                 if (sortBy === 'sppg_asc') return (a.nama_sppg || '').localeCompare(b.nama_sppg || '');
                 if (sortBy === 'kec_asc') return (a.kecamatan || '').localeCompare(b.kecamatan || '');
                 if (sortBy === 'penerima_desc') return (Number(b.jumlah_penerima) || 0) - (Number(a.jumlah_penerima) || 0);
-                return (b.id || 0) - (a.id || 0);
+                return (Number(b.id) || 0) - (Number(a.id) || 0);
             });
 
             filteredRecords = result;
@@ -1500,9 +1556,22 @@
                 let rows = filteredRecords.map((item, idx) => {
                     const kat = (item.kategori || 'SPPG').toUpperCase();
                     const isKmp = kat === 'KMP';
-                    const pengurusInfo = isKmp
-                        ? `Sek: ${escapeHTML(item.sekretaris || '-')} | Bend: ${escapeHTML(item.bendahara || '-')}`
-                        : '-';
+                    const safeId = escapeHTML(String(item.id));
+                    const coord = getCoordinateInfo(item);
+                    const waUrl = formatWaUrl(item.no_telp_penanggungjawab);
+
+                    const pengurusInfo = `Sek: ${escapeHTML(item.sekretaris || '-')} | Bend: ${escapeHTML(item.bendahara || '-')}`;
+                    const pjInfo = item.nama_penanggungjawab
+                        ? `${escapeHTML(item.nama_penanggungjawab)}${item.no_telp_penanggungjawab ? `<br><small style="color:#0284c7; font-weight:700;">${escapeHTML(item.no_telp_penanggungjawab)}</small>` : ''}`
+                        : (item.no_telp_penanggungjawab ? escapeHTML(item.no_telp_penanggungjawab) : '-');
+
+                    const gpsCell = coord.hasCoords
+                        ? `<div style="display:flex; flex-direction:column; gap:4px;">
+                               <span style="font-size:11px; font-weight:600;">${escapeHTML(coord.text)}</span>
+                               <a href="${escapeHTML(coord.mapsUrl)}" target="_blank" rel="noopener noreferrer" class="btn-mini-preview btn-mini-maps" style="width:fit-content;"><i class="fas fa-map-marker-alt"></i> Maps</a>
+                           </div>`
+                        : (coord.text ? escapeHTML(coord.text) : '-');
+
                     return `
                     <tr>
                         <td><strong>${idx + 1}</strong></td>
@@ -1511,8 +1580,13 @@
                         <td>${escapeHTML(item.kecamatan)}</td>
                         <td>${escapeHTML(item.kelurahan)}</td>
                         <td>${escapeHTML(item.alamat)}</td>
+                        <td>${gpsCell}</td>
                         <td>${escapeHTML(item.kepala_sppg)}</td>
                         <td>${pengurusInfo}</td>
+                        <td>
+                            ${pjInfo}
+                            ${waUrl ? `<div style="margin-top:4px;"><a href="${escapeHTML(waUrl)}" target="_blank" rel="noopener noreferrer" class="btn-mini-preview btn-mini-wa" style="width:fit-content;"><i class="fab fa-whatsapp"></i> WA</a></div>` : ''}
+                        </td>
                         <td style="text-align:center;">${isKmp ? '-' : Number(item.jumlah_pegawai || 0).toLocaleString('id-ID')}</td>
                         <td style="text-align:center;"><strong>${isKmp ? '-' : Number(item.jumlah_penerima || 0).toLocaleString('id-ID')}</strong></td>
                         <td>
@@ -1521,8 +1595,8 @@
                                 : '-'}
                         </td>
                         <td style="white-space:nowrap;">
-                            <button type="button" class="action-btn action-edit" onclick="openEditModal(${item.id})"><i class="fas fa-edit"></i></button>
-                            <button type="button" class="action-btn action-delete" onclick="confirmDeleteRecord(${item.id})"><i class="fas fa-trash"></i></button>
+                            <button type="button" class="action-btn action-edit" onclick="openEditModal('${safeId}')" title="Edit Data"><i class="fas fa-edit"></i></button>
+                            <button type="button" class="action-btn action-delete" onclick="confirmDeleteRecord('${safeId}')" title="Hapus Data"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
                 `}).join('');
@@ -1538,8 +1612,10 @@
                                     <th>Kecamatan</th>
                                     <th>Kelurahan</th>
                                     <th>Alamat</th>
+                                    <th>Koordinat GPS</th>
                                     <th>Kepala / Ketua</th>
-                                    <th>Sekretaris & Bendahara (KMP)</th>
+                                    <th>Sekretaris & Bendahara</th>
+                                    <th>Penanggungjawab</th>
                                     <th>Pegawai</th>
                                     <th>Penerima</th>
                                     <th>Evident</th>
@@ -1556,14 +1632,42 @@
             const cardsHtml = filteredRecords.map(item => {
                 const kat = (item.kategori || 'SPPG').toUpperCase();
                 const isKmp = kat === 'KMP';
+                const safeId = escapeHTML(String(item.id));
                 const fileNameLabel = item.evident_lokasi ? item.evident_lokasi.split('/').pop() : 'Tidak ada file';
+                const coord = getCoordinateInfo(item);
+                const waUrl = formatWaUrl(item.no_telp_penanggungjawab);
+
+                const gpsBlock = `
+                    <div class="data-item">
+                        <span class="data-label">Titik Koordinat GPS</span>
+                        <div class="data-value file-row">
+                            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                <i class="fas fa-map-pin" style="color:#0284c7; margin-right:4px;"></i> ${escapeHTML(coord.text || 'Belum diisi')}
+                            </span>
+                            ${coord.hasCoords ? `<a href="${escapeHTML(coord.mapsUrl)}" target="_blank" rel="noopener noreferrer" class="btn-mini-preview btn-mini-maps"><i class="fas fa-external-link-alt"></i> Buka Maps</a>` : ''}
+                        </div>
+                    </div>
+                `;
+
+                const pjBlock = `
+                    <div class="data-item"><span class="data-label">Nama Penanggungjawab</span><span class="data-value">${escapeHTML(item.nama_penanggungjawab || '-')}</span></div>
+                    <div class="data-item">
+                        <span class="data-label">No. Telp Penanggungjawab</span>
+                        <div class="data-value file-row">
+                            <span>${escapeHTML(item.no_telp_penanggungjawab || '-')}</span>
+                            ${waUrl ? `<a href="${escapeHTML(waUrl)}" target="_blank" rel="noopener noreferrer" class="btn-mini-preview btn-mini-wa"><i class="fab fa-whatsapp"></i> Chat</a>` : ''}
+                        </div>
+                    </div>
+                `;
 
                 const bodyFields = isKmp ? `
                     <div class="data-item"><span class="data-label">Kecamatan / Kelurahan</span><span class="data-value">${escapeHTML(item.kecamatan)} / ${escapeHTML(item.kelurahan)}</span></div>
                     <div class="data-item"><span class="data-label">Alamat</span><span class="data-value">${escapeHTML(item.alamat)}</span></div>
+                    ${gpsBlock}
                     <div class="data-item"><span class="data-label">Ketua</span><span class="data-value">${escapeHTML(item.kepala_sppg)}</span></div>
                     <div class="data-item"><span class="data-label">Sekretaris</span><span class="data-value">${escapeHTML(item.sekretaris || '-')}</span></div>
                     <div class="data-item"><span class="data-label">Bendahara</span><span class="data-value">${escapeHTML(item.bendahara || '-')}</span></div>
+                    ${(item.nama_penanggungjawab || item.no_telp_penanggungjawab) ? pjBlock : ''}
                     <div class="data-item">
                         <span class="data-label">Evident Layout SOTK</span>
                         <div class="data-value file-row">
@@ -1576,7 +1680,11 @@
                 ` : `
                     <div class="data-item"><span class="data-label">Kecamatan / Kelurahan</span><span class="data-value">${escapeHTML(item.kecamatan)} / ${escapeHTML(item.kelurahan)}</span></div>
                     <div class="data-item"><span class="data-label">Alamat</span><span class="data-value">${escapeHTML(item.alamat)}</span></div>
+                    ${gpsBlock}
                     <div class="data-item"><span class="data-label">Kepala SPPG</span><span class="data-value">${escapeHTML(item.kepala_sppg)}</span></div>
+                    <div class="data-item"><span class="data-label">Sekretaris</span><span class="data-value">${escapeHTML(item.sekretaris || '-')}</span></div>
+                    <div class="data-item"><span class="data-label">Bendahara</span><span class="data-value">${escapeHTML(item.bendahara || '-')}</span></div>
+                    ${pjBlock}
                     <div class="data-item"><span class="data-label">Jumlah Pegawai</span><span class="data-value">${Number(item.jumlah_pegawai || 0).toLocaleString('id-ID')} Orang</span></div>
                     <div class="data-item"><span class="data-label">Penerima Manfaat / Sekolah</span><span class="data-value">${Number(item.jumlah_penerima || 0).toLocaleString('id-ID')} Target</span></div>
                     <div class="data-item">
@@ -1607,8 +1715,8 @@
                             ${bodyFields}
                         </div>
                         <div class="card-actions">
-                            <button type="button" class="action-btn action-edit" onclick="openEditModal(${item.id})"><i class="fas fa-edit"></i> Edit</button>
-                            <button type="button" class="action-btn action-delete" onclick="confirmDeleteRecord(${item.id})"><i class="fas fa-trash"></i> Hapus</button>
+                            <button type="button" class="action-btn action-edit" onclick="openEditModal('${safeId}')"><i class="fas fa-edit"></i> Edit</button>
+                            <button type="button" class="action-btn action-delete" onclick="confirmDeleteRecord('${safeId}')"><i class="fas fa-trash"></i> Hapus</button>
                         </div>
                     </div>
                 `;
@@ -1627,15 +1735,19 @@
             document.getElementById('edit-label-nama').textContent = isKmp ? 'Nama KMP' : 'Nama SPPG';
             document.getElementById('edit-label-kepala').textContent = isKmp ? 'Ketua' : 'Kepala SPPG';
             document.getElementById('edit-sppg-numbers-grid').style.display = isKmp ? 'none' : 'grid';
-            document.getElementById('edit-kmp-pengurus-grid').style.display = isKmp ? 'grid' : 'none';
         }
 
         function openEditModal(id) {
-            const item = allRecords.find(r => r.id === id);
-            if (!item) return;
+            const item = allRecords.find(r => String(r.id) === String(id));
+            if (!item) {
+                showToast("Data tidak ditemukan.", "error");
+                return;
+            }
 
             const kat = (item.kategori || 'SPPG').toUpperCase();
-            document.getElementById('edit-id').value = item.id;
+            const coord = getCoordinateInfo(item);
+
+            document.getElementById('edit-id').value = String(item.id);
             document.getElementById('edit-kategori').value = kat;
             onEditKategoriChange();
 
@@ -1644,11 +1756,14 @@
             updateEditKelurahan();
             document.getElementById('edit-kelurahan').value = item.kelurahan || '';
             document.getElementById('edit-alamat').value = item.alamat || '';
+            document.getElementById('edit-koordinat').value = coord.text || '';
             document.getElementById('edit-kepala').value = item.kepala_sppg || '';
-            document.getElementById('edit-pegawai').value = item.jumlah_pegawai ?? 0;
-            document.getElementById('edit-penerima').value = item.jumlah_penerima ?? 0;
             document.getElementById('edit-sekretaris').value = item.sekretaris || '';
             document.getElementById('edit-bendahara').value = item.bendahara || '';
+            document.getElementById('edit-penanggungjawab').value = item.nama_penanggungjawab || '';
+            document.getElementById('edit-telp-penanggungjawab').value = item.no_telp_penanggungjawab || '';
+            document.getElementById('edit-pegawai').value = item.jumlah_pegawai ?? 0;
+            document.getElementById('edit-penerima').value = item.jumlah_penerima ?? 0;
 
             document.getElementById('editModal').classList.add('show');
         }
@@ -1657,9 +1772,34 @@
 
         async function saveEditedRecord(e) {
             e.preventDefault();
-            const id = Number(document.getElementById('edit-id').value);
+            const rawId = document.getElementById('edit-id').value;
+            const targetItem = allRecords.find(r => String(r.id) === String(rawId));
+            const dbId = targetItem ? targetItem.id : rawId;
+
             const kat = document.getElementById('edit-kategori').value || 'SPPG';
             const isKmp = kat === 'KMP';
+
+            const rawKoordinat = document.getElementById('edit-koordinat').value.trim();
+            let parsedLat = null;
+            let parsedLng = null;
+            let cleanKoordinat = null;
+
+            if (rawKoordinat) {
+                const parts = rawKoordinat.split(',');
+                if (parts.length !== 2 || isNaN(parseFloat(parts[0].trim())) || isNaN(parseFloat(parts[1].trim()))) {
+                    showToast("Format koordinat harus: latitude, longitude (contoh: -6.9175, 107.6191)", "warning");
+                    document.getElementById('edit-koordinat').focus();
+                    return;
+                }
+                parsedLat = parseFloat(parts[0].trim());
+                parsedLng = parseFloat(parts[1].trim());
+                cleanKoordinat = `${parsedLat}, ${parsedLng}`;
+            }
+
+            const sekretarisVal = document.getElementById('edit-sekretaris').value.trim();
+            const bendaharaVal = document.getElementById('edit-bendahara').value.trim();
+            const pjNamaVal = document.getElementById('edit-penanggungjawab').value.trim();
+            const pjTelpVal = document.getElementById('edit-telp-penanggungjawab').value.trim();
 
             const payload = {
                 kategori: kat,
@@ -1667,37 +1807,53 @@
                 kecamatan: document.getElementById('edit-kecamatan').value,
                 kelurahan: document.getElementById('edit-kelurahan').value,
                 alamat: document.getElementById('edit-alamat').value.trim(),
+                latitude: parsedLat,
+                longitude: parsedLng,
+                koordinat: cleanKoordinat,
                 kepala_sppg: document.getElementById('edit-kepala').value.trim(),
+                sekretaris: sekretarisVal || null,
+                bendahara: bendaharaVal || null,
+                nama_penanggungjawab: pjNamaVal || null,
+                no_telp_penanggungjawab: pjTelpVal || null,
                 jumlah_pegawai: isKmp ? 0 : (parseInt(document.getElementById('edit-pegawai').value, 10) || 0),
-                jumlah_penerima: isKmp ? 0 : (parseInt(document.getElementById('edit-penerima').value, 10) || 0),
-                sekretaris: isKmp ? document.getElementById('edit-sekretaris').value.trim() : null,
-                bendahara: isKmp ? document.getElementById('edit-bendahara').value.trim() : null
+                jumlah_penerima: isKmp ? 0 : (parseInt(document.getElementById('edit-penerima').value, 10) || 0)
             };
 
             const btn = document.getElementById('btn-save-edit');
             btn.disabled = true;
+            btn.textContent = 'Menyimpan...';
             try {
-                const { error } = await supabaseClient
+                const { data: updatedRows, error } = await supabaseClient
                     .from('data_sppg')
                     .update(payload)
-                    .eq('id', id);
+                    .eq('id', dbId)
+                    .select();
 
                 if (error) throw error;
+                if (!updatedRows || updatedRows.length === 0) {
+                    throw new Error("Izin UPDATE di Supabase belum aktif (RLS Policy).");
+                }
+
                 closeEditModal();
                 showToast("Data berhasil diperbarui.", "success");
                 await fetchAllSupabaseData(false);
             } catch (err) {
-                showToast("Gagal memperbarui data.", "error");
+                console.error("Edit error:", err);
+                showToast(err.message || "Gagal memperbarui data.", "error");
             } finally {
                 btn.disabled = false;
+                btn.textContent = 'Simpan Perubahan';
             }
         }
 
         let pendingDeleteId = null;
         function confirmDeleteRecord(id) {
-            const item = allRecords.find(r => r.id === id);
-            if (!item) return;
-            pendingDeleteId = id;
+            const item = allRecords.find(r => String(r.id) === String(id));
+            if (!item) {
+                showToast("Data tidak ditemukan.", "error");
+                return;
+            }
+            pendingDeleteId = item.id;
             document.getElementById('confirm-title').textContent = "Hapus Data Permanen";
             document.getElementById('confirm-message').textContent = `Hapus permanen "${item.nama_sppg}" beserta file PDF evident-nya?`;
             document.getElementById('confirmModal').classList.add('show');
@@ -1709,30 +1865,54 @@
         }
 
         document.getElementById('confirm-yes-btn').addEventListener('click', async () => {
-            if (!pendingDeleteId) return;
-            const id = pendingDeleteId;
-            const item = allRecords.find(r => r.id === id);
-            closeConfirmModal();
+            if (pendingDeleteId === null || pendingDeleteId === undefined) return;
+            const dbId = pendingDeleteId;
+            const item = allRecords.find(r => String(r.id) === String(dbId));
+            const yesBtn = document.getElementById('confirm-yes-btn');
+            yesBtn.disabled = true;
+            yesBtn.textContent = 'Menghapus...';
 
             try {
+                // Hapus baris dari tabel database terlebih dahulu & pastikan terhapus
+                const { data: deletedRows, error } = await supabaseClient
+                    .from('data_sppg')
+                    .delete()
+                    .eq('id', dbId)
+                    .select();
+
+                if (error) throw error;
+                if (!deletedRows || deletedRows.length === 0) {
+                    throw new Error("Izin DELETE di Supabase belum aktif (RLS Policy).");
+                }
+
+                // Hapus file PDF di Storage Bucket jika ada
                 if (item && item.evident_lokasi) {
-                    const urlParts = item.evident_lokasi.split('/evident_sppg/');
-                    if (urlParts.length > 1) {
-                        const filePath = decodeURIComponent(urlParts[1].split('?')[0]);
-                        await supabaseClient.storage.from('evident_sppg').remove([filePath]);
+                    try {
+                        let filePath = '';
+                        if (item.evident_lokasi.includes('/evident_sppg/')) {
+                            const urlParts = item.evident_lokasi.split('/evident_sppg/');
+                            filePath = decodeURIComponent(urlParts[1].split('?')[0]);
+                        } else if (!item.evident_lokasi.startsWith('http')) {
+                            filePath = decodeURIComponent(item.evident_lokasi.split('?')[0]);
+                        }
+                        if (filePath) {
+                            await supabaseClient.storage.from('evident_sppg').remove([filePath]);
+                        }
+                    } catch (storageErr) {
+                        console.warn("Storage cleanup warning:", storageErr);
                     }
                 }
 
-                const { error } = await supabaseClient
-                    .from('data_sppg')
-                    .delete()
-                    .eq('id', id);
-
-                if (error) throw error;
-                showToast("Data berhasil dihapus.", "success");
+                closeConfirmModal();
+                showToast("Data berhasil dihapus permanen.", "success");
                 await fetchAllSupabaseData(false);
             } catch (err) {
-                showToast("Gagal menghapus data.", "error");
+                console.error("Delete error:", err);
+                closeConfirmModal();
+                showToast(err.message || "Gagal menghapus data.", "error");
+            } finally {
+                yesBtn.disabled = false;
+                yesBtn.textContent = 'Ya, Hapus Permanen';
             }
         });
 
@@ -1912,11 +2092,29 @@
             // ==========================================
             // SHEET 2: DETAIL SELURUH DATA SPPG & KMP
             // ==========================================
+            const totalCols2 = 16;
             const ws2Aoa = [
-                ["DAFTAR DETAIL UNIT SPPG & KMP KOTA BANDUNG", "", "", "", "", "", "", "", "", "", "", ""],
-                [`Total Data Terlampir: ${filteredRecords.length} Unit  •  Dicetak pada: ${tglCetak}`, "", "", "", "", "", "", "", "", "", "", ""],
-                ["", "", "", "", "", "", "", "", "", "", "", ""],
-                ["No", "Kategori", "Nama SPPG / KMP", "Kecamatan", "Kelurahan", "Alamat Lengkap", "Kepala SPPG / Ketua", "Sekretaris (KMP)", "Bendahara (KMP)", "Jumlah Pegawai", "Penerima Manfaat", "Tautan Evident PDF"]
+                ["DAFTAR DETAIL UNIT SPPG & KMP KOTA BANDUNG", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+                [`Total Data Terlampir: ${filteredRecords.length} Unit  •  Dicetak pada: ${tglCetak}`, "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+                ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+                [
+                    "No",
+                    "Kategori",
+                    "Nama SPPG / KMP",
+                    "Kecamatan",
+                    "Kelurahan",
+                    "Alamat Lengkap",
+                    "Titik Koordinat GPS",
+                    "Tautan Google Maps",
+                    "Kepala SPPG / Ketua",
+                    "Sekretaris",
+                    "Bendahara",
+                    "Nama Penanggungjawab",
+                    "No. Telp Penanggungjawab",
+                    "Jumlah Pegawai",
+                    "Penerima Manfaat",
+                    "Tautan Evident PDF"
+                ]
             ];
 
             let detailSumPegawai = 0;
@@ -1927,6 +2125,7 @@
                 const isKmp = kat === 'KMP';
                 const peg = isKmp ? 0 : (Number(item.jumlah_pegawai) || 0);
                 const pen = isKmp ? 0 : (Number(item.jumlah_penerima) || 0);
+                const coord = getCoordinateInfo(item);
                 detailSumPegawai += peg;
                 detailSumPenerima += pen;
 
@@ -1937,21 +2136,25 @@
                     item.kecamatan || '-',
                     item.kelurahan || '-',
                     item.alamat || '-',
+                    coord.text || '-',
+                    coord.hasCoords ? coord.mapsUrl : '-',
                     item.kepala_sppg || '-',
-                    isKmp ? (item.sekretaris || '-') : '-',
-                    isKmp ? (item.bendahara || '-') : '-',
+                    item.sekretaris || '-',
+                    item.bendahara || '-',
+                    item.nama_penanggungjawab || '-',
+                    item.no_telp_penanggungjawab || '-',
                     isKmp ? '-' : peg,
                     isKmp ? '-' : pen,
                     item.evident_lokasi || '-'
                 ]);
             });
 
-            ws2Aoa.push(["", "TOTAL KESELURUHAN", "", "", "", "", "", "", "", detailSumPegawai, detailSumPenerima, ""]);
+            ws2Aoa.push(["", "TOTAL KESELURUHAN", "", "", "", "", "", "", "", "", "", "", "", detailSumPegawai, detailSumPenerima, ""]);
 
             const ws2 = XLSX.utils.aoa_to_sheet(ws2Aoa);
             ws2['!merges'] = [
-                { s: { r: 0, c: 0 }, e: { r: 0, c: 11 } },
-                { s: { r: 1, c: 0 }, e: { r: 1, c: 11 } }
+                { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols2 - 1 } },
+                { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols2 - 1 } }
             ];
             ws2['!cols'] = [
                 { wch: 6 },
@@ -1961,15 +2164,19 @@
                 { wch: 20 },
                 { wch: 36 },
                 { wch: 24 },
+                { wch: 38 },
+                { wch: 24 },
                 { wch: 22 },
                 { wch: 22 },
+                { wch: 24 },
+                { wch: 20 },
                 { wch: 16 },
                 { wch: 18 },
                 { wch: 44 }
             ];
             ws2['!rows'] = [{ hpt: 28 }, { hpt: 20 }, { hpt: 10 }, { hpt: 26 }];
 
-            for (let c = 0; c < 12; c++) {
+            for (let c = 0; c < totalCols2; c++) {
                 ws2[XLSX.utils.encode_cell({ r: 0, c })].s = styleTitleBanner;
                 ws2[XLSX.utils.encode_cell({ r: 1, c })].s = styleSubBanner;
                 ws2[XLSX.utils.encode_cell({ r: 3, c })].s = styleTableHeader;
@@ -1981,11 +2188,11 @@
                 ws2['!rows'][r] = { hpt: alamatLen > 45 ? 32 : 22 };
                 const rowBg = (r % 2 === 0) ? "FFFFFF" : "F0F7FF";
 
-                for (let c = 0; c < 12; c++) {
+                for (let c = 0; c < totalCols2; c++) {
                     const ref = XLSX.utils.encode_cell({ r, c });
                     const val = ws2Aoa[r][c];
-                    const isNum = (c === 9 || c === 10) && typeof val === 'number';
-                    const isLink = c === 11 && val !== '-';
+                    const isNum = (c === 13 || c === 14) && typeof val === 'number';
+                    const isLink = (c === 7 || c === 15) && val !== '-';
                     ws2[ref].s = {
                         font: {
                             name: "Calibri",
@@ -1996,7 +2203,7 @@
                         },
                         fill: { fgColor: { rgb: rowBg } },
                         alignment: {
-                            horizontal: (c === 0 || c === 1 || ((c === 9 || c === 10) && val === '-')) ? "center" : isNum ? "right" : "left",
+                            horizontal: (c === 0 || c === 1 || ((c === 13 || c === 14) && val === '-')) ? "center" : isNum ? "right" : "left",
                             vertical: "center",
                             wrapText: c === 2 || c === 5
                         },
@@ -2007,9 +2214,9 @@
             }
 
             ws2['!rows'][totalRowIdx2] = { hpt: 24 };
-            for (let c = 0; c < 12; c++) {
+            for (let c = 0; c < totalCols2; c++) {
                 const ref = XLSX.utils.encode_cell({ r: totalRowIdx2, c });
-                const isNum = c === 9 || c === 10;
+                const isNum = c === 13 || c === 14;
                 ws2[ref].s = {
                     font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "1E3A8A" } },
                     fill: { fgColor: { rgb: "DBEAFE" } },
@@ -2049,3 +2256,4 @@
         });
     </script>
 </body>
+</html>
